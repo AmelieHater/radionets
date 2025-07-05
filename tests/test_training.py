@@ -17,7 +17,7 @@ def test_create_databunch():
 
     assert data.train_dl is not None
     assert data.valid_dl is not None
-    assert data.c is None
+    assert data.num_classes is None
 
 
 def test_define_learner():
@@ -66,8 +66,8 @@ def test_save_model():
     def check(x):
         if torch.is_tensor(x):
             assert x.nelement != 0
-            assert ~x.isnan().any()
-            assert ~(0 in x)
+            assert not x.isnan().any()
+            assert 0 not in x
 
         assert x is not None
 

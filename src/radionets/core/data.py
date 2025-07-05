@@ -1,13 +1,14 @@
 import re
 from pathlib import Path
+from typing import Optional
 
 import h5py
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 
 
-class h5_dataset:
+class H5DataSet:
     def __init__(self, bundle_paths, tar_fourier):
         """
         Save the bundle paths and the number of bundles in one file.
@@ -19,7 +20,7 @@ class h5_dataset:
         self.tar_fourier = tar_fourier
 
     def __call__(self):
-        return print("This is the h5_dataset class.")
+        return print("This is the H5DataSet class.")
 
     def __len__(self):
         """
@@ -78,22 +79,6 @@ class h5_dataset:
         return data.float()
 
 
-def split_real_imag(array):
-    """
-    takes a complex array and returns the real and the imaginary part
-    """
-    return array.real, array.imag
-
-
-def split_amp_phase(array):
-    """
-    takes a complex array and returns the amplitude and the phase
-    """
-    amp = np.abs(array)
-    phase = np.angle(array)
-    return amp, phase
-
-
 def get_dls(train_ds, valid_ds, batch_size, **kwargs):
     return (
         DataLoader(train_ds, batch_size=batch_size, shuffle=True, **kwargs),
@@ -102,18 +87,33 @@ def get_dls(train_ds, valid_ds, batch_size, **kwargs):
 
 
 class DataBunch:
-    def __init__(self, train_dl, valid_dl, c=None):
+    def __init__(
+        self,
+        train_dl: DataLoader,
+        valid_dl: DataLoader,
+        num_classes: Optional[int] = None,
+    ):
         self.train_dl = train_dl
         self.valid_dl = valid_dl
-        self.c = c
+        self.num_classes = num_classes
 
     @property
-    def train_ds(self):
+    def train_ds(self) -> Dataset:
         return self.train_dl.dataset
 
     @property
-    def valid_ds(self):
+    def valid_ds(self) -> Dataset:
         return self.valid_dl.dataset
+
+    def __call__(self):
+        return print("This is the DataBunch class.")
+
+    def __repr__(self) -> str:
+        return (
+            f"DataBunch(train_size={len(self.train_ds)}, "
+            f"valid_size={len(self.valid_ds)}, "
+            f"num_classes={self.num_classes})"
+        )
 
 
 def save_bundle(path, bundle, counter, name="gs_bundle"):
@@ -185,7 +185,7 @@ def open_bundle_pack(path):
 
 def load_data(data_path, mode, fourier=False):
     """
-    Load data set from a directory and return it as h5_dataset.
+    Load data set from a directory and return it as H5DataSet.
 
     Parameters
     ----------
@@ -198,7 +198,7 @@ def load_data(data_path, mode, fourier=False):
 
     Returns
     -------
-    test_ds: h5_dataset
+    test_ds: H5DataSet
         dataset containing x and y images
     """
     bundle_paths = get_bundles(data_path)
@@ -208,6 +208,6 @@ def load_data(data_path, mode, fourier=False):
     )
     data = sorted(data, key=lambda f: int("".join(filter(str.isdigit, str(f)))))
 
-    ds = h5_dataset(data, tar_fourier=fourier)
+    ds = H5DataSet(data, tar_fourier=fourier)
 
     return ds

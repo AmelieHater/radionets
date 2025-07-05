@@ -268,7 +268,7 @@ def get_images(test_ds, num_images, rand=False, indices=None):
 
     Parameters
     ----------
-    test_ds: h5_dataset
+    test_ds: H5DataSet
         data set with test images
     num_images: int
         number of test images

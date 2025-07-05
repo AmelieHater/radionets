@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 
 
@@ -29,3 +30,19 @@ def get_ifft_torch(array, amp_phase=False, scale=False, uncertainty=False):
         compl = compl.squeeze(0)
 
     return torch.abs(torch.fft.ifftshift(torch.fft.ifft2(torch.fft.fftshift(compl))))
+
+
+def split_real_imag(array):
+    """
+    takes a complex array and returns the real and the imaginary part
+    """
+    return array.real, array.imag
+
+
+def split_amp_phase(array):
+    """
+    takes a complex array and returns the amplitude and the phase
+    """
+    amp = np.abs(array)
+    phase = np.angle(array)
+    return amp, phase
