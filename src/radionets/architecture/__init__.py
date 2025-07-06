@@ -6,11 +6,11 @@ from .archs import (
     SRResNet_34_unc,
     SRResNet_34_unc_no_grad,
 )
-from .blocks import BaseBlock, SRBlock
+from .blocks import NNBlock, SRBlock
 from .unc_archs import Uncertainty, UncertaintyWrapper
 
 __all__ = [
-    "BaseBlock",
+    "NNBlock",
     "GeneralELU",
     "GeneralReLU",
     "Lambda",
