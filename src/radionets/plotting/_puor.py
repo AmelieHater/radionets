@@ -1,7 +1,6 @@
-import matplotlib as mpl
 from matplotlib.colors import ListedColormap
 
-__all__ = ["cmap"]
+__all__ = ["PuOr"]
 
 __author__ = "Anno Knierim"
 
