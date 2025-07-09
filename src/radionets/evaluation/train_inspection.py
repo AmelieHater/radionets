@@ -12,25 +12,6 @@ from radionets.evaluation.blob_detection import calc_blobs, crop_first_component
 from radionets.evaluation.contour import analyse_intensity, area_of_contour
 from radionets.evaluation.dynamic_range import calc_dr
 from radionets.evaluation.jet_angle import calc_jet_angle
-from radionets.evaluation.plotting import (
-    hist_point,
-    histogram_area,
-    histogram_dynamic_ranges,
-    histogram_gan_sources,
-    histogram_jet_angles,
-    histogram_mean_diff,
-    histogram_ms_ssim,
-    histogram_peak_intensity,
-    histogram_sum_intensity,
-    histogram_unc,
-    plot_contour,
-    plot_length_point,
-    visualize_sampled_unc,
-    visualize_source_reconstruction,
-    visualize_uncertainty,
-    visualize_with_fourier,
-    visualize_with_fourier_diff,
-)
 from radionets.evaluation.pointsources import flux_comparison
 from radionets.evaluation.utils import (
     apply_normalization,
@@ -51,6 +32,27 @@ from radionets.evaluation.utils import (
     sampled_dataset,
     save_pred,
     symmetry,
+)
+from radionets.plotting.hist import (
+    hist_point,
+    histogram_area,
+    histogram_dynamic_ranges,
+    histogram_gan_sources,
+    histogram_jet_angles,
+    histogram_mean_diff,
+    histogram_ms_ssim,
+    histogram_peak_intensity,
+    histogram_sum_intensity,
+    histogram_unc,
+)
+from radionets.plotting.visualization import (
+    plot_contour,
+    plot_length_point,
+    visualize_sampled_unc,
+    visualize_source_reconstruction,
+    visualize_uncertainty,
+    visualize_with_fourier,
+    visualize_with_fourier_diff,
 )
 
 

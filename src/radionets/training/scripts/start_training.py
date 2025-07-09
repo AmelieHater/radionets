@@ -4,10 +4,10 @@ from pathlib import Path
 import click
 import toml
 
-from radionets.core.inspection import plot_loss, plot_lr, plot_lr_loss
 from radionets.core.learner import define_learner
 from radionets.core.model import load_pre_model
 from radionets.evaluation.train_inspection import after_training_plots
+from radionets.plotting.inspection import plot_loss, plot_lr, plot_lr_loss
 from radionets.training.utils import (
     check_outpath,
     create_databunch,

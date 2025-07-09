@@ -1,7 +1,7 @@
 import numpy as np
 from astropy.modeling import fitting, models
 
-from radionets.evaluation.plotting import plot_fitgaussian
+from radionets.plotting.plotting import plot_fitgaussian
 
 
 def fitgaussian_crop(data, amp_scale=0.97, crop_size=0.1):

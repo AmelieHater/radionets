@@ -1,8 +1,15 @@
+from pathlib import Path
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+# # to prevent the localhost error from happening first change the backend and
+# # second turn off the interactive mode
+# mpl.use("Agg")
+# plt.ioff()
 
-def plot_loss(learn, model_path, output_format="pdf"):
+
+def plot_loss(learn, model_path: str | Path, output_format: str = "png") -> None:
     """
     Plot train and valid loss of model.
 
@@ -13,10 +20,8 @@ def plot_loss(learn, model_path, output_format="pdf"):
     model_path: str
         path to trained model
     """
-    # to prevent the localhost error from happening first change the backend and
-    # second turn off the interactive mode
-    mpl.use("Agg")
-    plt.ioff()
+    if isinstance(model_path, str):
+        model_path = Path(model_path)
 
     save_path = model_path.with_suffix("")
     print(f"\nPlotting Loss for: {model_path.stem}\n")
@@ -36,7 +41,7 @@ def plot_loss(learn, model_path, output_format="pdf"):
     mpl.rcParams.update(mpl.rcParamsDefault)
 
 
-def plot_lr(learn, model_path, output_format="png"):
+def plot_lr(learn, model_path: str | Path, output_format: str = "png") -> None:
     """
     Plot learning rate of model.
 
@@ -44,13 +49,12 @@ def plot_lr(learn, model_path, output_format="png"):
     ----------
     learn: learner-object
         learner containing data and model
-    model_path: str
+    model_path : str or Path
         path to trained model
+    output_format :
     """
-    # to prevent the localhost error from happening first change the backend and
-    # second turn off the interactive mode
-    mpl.use("Agg")
-    plt.ioff()
+    if isinstance(model_path, str):
+        model_path = Path(model_path)
 
     save_path = model_path.with_suffix("")
     print(f"\nPlotting Learning rate for: {model_path.stem}\n")
@@ -63,7 +67,9 @@ def plot_lr(learn, model_path, output_format="png"):
     mpl.rcParams.update(mpl.rcParamsDefault)
 
 
-def plot_lr_loss(learn, arch_name, out_path, skip_last, output_format="png"):
+def plot_lr_loss(
+    learn, arch_name: str, out_path: str | Path, skip_last, output_format="png"
+):
     """
     Plot loss of learning rate finder.
 
@@ -78,10 +84,8 @@ def plot_lr_loss(learn, arch_name, out_path, skip_last, output_format="png"):
     skip_last: int
         skip n last points
     """
-    # to prevent the localhost error from happening first change the backend and
-    # second turn off the interactive mode
-    mpl.use("Agg")
-    plt.ioff()
+    if isinstance(out_path, str):
+        out_path = Path(out_path)
 
     print(f"\nPlotting Lr vs Loss for architecture: {arch_name}\n")
 

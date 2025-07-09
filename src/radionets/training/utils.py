@@ -7,9 +7,9 @@ from tqdm import tqdm
 
 from radionets import architecture
 from radionets.core.data import DataBunch, get_dls, load_data
-from radionets.core.inspection import plot_loss
 from radionets.core.model import save_model
 from radionets.evaluation.train_inspection import create_inspection_plots
+from radionets.plotting.inspection import plot_loss
 
 
 def create_databunch(data_path, fourier, batch_size):
