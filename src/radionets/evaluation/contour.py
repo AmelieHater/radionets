@@ -80,7 +80,7 @@ def analyse_intensity(pred, truth):
         pred = pred.reshape(1, pred.shape[-2], pred.shape[-1])
         truth = truth.reshape(1, truth.shape[-2], truth.shape[-1])
 
-    threshold = (truth.max(-1).max(-1) * 0.1).reshape(truth.shape[0], 1, 1)
+    threshold = (truth.max(-1).max(-1) * 0.05).reshape(truth.shape[0], 1, 1)
     source_truth = np.where(truth > threshold, truth, 0)
     source_pred = np.where(pred > threshold, pred, 0)
 
