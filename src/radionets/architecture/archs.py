@@ -6,6 +6,14 @@ from torch import nn
 from radionets.architecture.activation import GeneralReLU
 from radionets.architecture.blocks import SRBlock
 
+__all__ = [
+    "SRResNet",
+    "SRResNet18",
+    "SRResNet34",
+    "SRResNet34_unc",
+    "SRResNet34_unc_no_grad",
+]
+
 
 class SRResNet(nn.Module):
     def __init__(self):
@@ -71,7 +79,7 @@ class SRResNet(nn.Module):
         return torch.cat([x0, x1], dim=1)
 
 
-class SRResNet_18(SRResNet):
+class SRResNet18(SRResNet):
     def __init__(self):
         super().__init__()
 
@@ -79,7 +87,7 @@ class SRResNet_18(SRResNet):
         self._create_blocks(8)
 
 
-class SRResNet_34(SRResNet):
+class SRResNet34(SRResNet):
     def __init__(self):
         super().__init__()
 
@@ -99,7 +107,7 @@ class SRResNet_34(SRResNet):
         )
 
 
-class SRResNet_34_unc(SRResNet):
+class SRResNet34_unc(SRResNet):
     def __init__(self):
         super().__init__()
 
@@ -138,25 +146,9 @@ class SRResNet_34_unc(SRResNet):
         return torch.cat([x0, x3, x1, x4], dim=1)
 
 
-class SRResNet_34_unc_no_grad(SRResNet):
+class SRResNet34_unc_no_grad(SRResNet34_unc):
     def __init__(self):
         super().__init__()
-
-        self._create_blocks(16)
-
-        self.postBlock = nn.Sequential(
-            nn.Conv2d(
-                in_channels=self.channels,
-                out_channels=self.channels,
-                kernel_size=3,
-                stride=1,
-                padding=1,
-                bias=False,
-            ),
-            nn.InstanceNorm2d(self.channels),
-        )
-
-        self.elu = GeneralReLU(sub=-1e-10)
 
     def forward(self, x):
         s = x.shape[-1]

@@ -1,8 +1,14 @@
 import torch
 from torch import nn
-from torch.nn.modules.utils import _pair
 
-from radionets.architecture import GeneralELU, SRResNet_34
+from radionets.architecture.activation import GeneralELU
+from radionets.architecture.archs import SRResNet34
+from radionets.architecture.layers import LocallyConnected2d
+
+__all__ = [
+    "Uncertainty",
+    "UncertaintyWrapper",
+]
 
 
 class Uncertainty(nn.Module):
@@ -50,17 +56,16 @@ class Uncertainty(nn.Module):
         return self.elu(x)
 
 
-class UncertaintyWrapper(nn.Module):
+class UncertaintyWrapper(SRResNet34):
     def __init__(self, img_size):
         super().__init__()
-        self.pred = SRResNet_34()
 
         self.uncertainty = Uncertainty(img_size)
 
     def forward(self, x):
+        # Get prediction from SRResNet34
+        pred = super.forward(x)
         inp = x.clone()
-
-        pred = self.pred(x)
 
         # x = torch.abs(pred - inp)
         x = torch.cat([pred, inp], dim=1)
@@ -78,40 +83,3 @@ class UncertaintyWrapper(nn.Module):
         )
 
         return val
-
-
-class LocallyConnected2d(nn.Module):
-    def __init__(
-        self, in_channels, out_channels, output_size, kernel_size, stride, bias=False
-    ):
-        super(LocallyConnected2d, self).__init__()
-        self.weight = nn.Parameter(
-            torch.randn(
-                1,
-                out_channels,
-                in_channels,
-                output_size[0],
-                output_size[1],
-                kernel_size**2,
-            )
-        )
-        if bias:
-            self.bias = nn.Parameter(
-                torch.randn(1, out_channels, output_size[0], output_size[1])
-            )
-        else:
-            self.register_parameter("bias", None)
-        self.kernel_size = _pair(kernel_size)
-        self.stride = _pair(stride)
-
-    def forward(self, x):
-        _, c, h, w = x.size()
-        kh, kw = self.kernel_size
-        dh, dw = self.stride
-        x = x.unfold(2, kh, dh).unfold(3, kw, dw)
-        x = x.contiguous().view(*x.size()[:-2], -1)
-        # Sum in in_channel and kernel_size dims
-        out = (x.unsqueeze(1) * self.weight).sum([2, -1])
-        if self.bias is not None:
-            out += self.bias
-        return out

@@ -1,5 +1,13 @@
 from torch import nn
 
+__all__ = [
+    "NNBlock",
+    "SRBlock",
+    "BottleneckResBlock",
+    "Encoder",
+    "Decoder",
+]
+
 
 class NNBlock(nn.Module):
     """Base block for neural networks.
@@ -397,7 +405,7 @@ class Encoder(NNBlock):
         self.bias = bias
         self.batchnorm = batchnorm
 
-        self.encoder_block = self.__encoder_block()
+        self.encoder_block = nn.Sequential(self.__encoder_block())
 
     def __encoder_block(self):
         block = [
@@ -504,7 +512,7 @@ class Decoder(NNBlock):
         self.output_padding = output_padding
         self.bias = bias
 
-        self.decoder_block = self.__decoder_block()
+        self.decoder_block = nn.Sequential(self.__decoder_block())
 
     def __decoder_block(self):
         block = [

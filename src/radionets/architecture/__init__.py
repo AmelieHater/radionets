@@ -1,25 +1,30 @@
 from .activation import GeneralELU, GeneralReLU, Lambda
 from .archs import (
     SRResNet,
-    SRResNet_18,
-    SRResNet_34,
-    SRResNet_34_unc,
-    SRResNet_34_unc_no_grad,
+    SRResNet18,
+    SRResNet34,
+    SRResNet34_unc,
+    SRResNet34_unc_no_grad,
 )
-from .blocks import NNBlock, SRBlock
+from .blocks import BottleneckResBlock, Decoder, Encoder, NNBlock, SRBlock
+from .layers import LocallyConnected2d
 from .unc_archs import Uncertainty, UncertaintyWrapper
 
 __all__ = [
-    "NNBlock",
+    "BottleneckResBlock",
+    "Decoder",
+    "Encoder",
     "GeneralELU",
     "GeneralReLU",
     "Lambda",
+    "LocallyConnected2d",
+    "NNBlock",
     "SRBlock",
     "SRResNet",
-    "SRResNet_18",
-    "SRResNet_34",
-    "SRResNet_34_unc",
-    "SRResNet_34_unc_no_grad",
+    "SRResNet18",
+    "SRResNet34",
+    "SRResNet34_unc",
+    "SRResNet34_unc_no_grad",
     "Uncertainty",
     "UncertaintyWrapper",
 ]
