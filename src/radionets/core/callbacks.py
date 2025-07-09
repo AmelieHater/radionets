@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import comet_ml
 import kornia as K
 import matplotlib.pyplot as plt
 import numpy as np
@@ -37,9 +38,7 @@ __all__ = [
 
 class CometCallback(Callback):
     def __init__(self, name, test_data, plot_n_epochs, amp_phase, scale):
-        from comet_ml import Experiment
-
-        self.experiment = Experiment(project_name=name)
+        self.experiment = comet_ml.Experiment(project_name=name)
         self.data_path = test_data
         self.plot_epoch = plot_n_epochs
         self.test_ds = load_data(self.data_path, mode="test", fourier=True)
