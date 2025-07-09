@@ -9,7 +9,6 @@ from fastai.callback.core import Callback, CancelBackwardException
 
 from radionets.core.model import save_model
 from radionets.core.utils import _maybe_item, get_ifft_torch
-from radionets.evaluation.plotting import OrBu
 from radionets.evaluation.utils import (
     apply_normalization,
     apply_symmetry,
@@ -99,13 +98,17 @@ class CometCallback(Callback):
         im1 = ax[0].imshow(pred[0, 0], cmap="inferno")
         make_axes_nice(fig, ax[0], im1, "Real")
 
-        im2 = ax[1].imshow(pred[0, 1], cmap=OrBu, vmin=-lim_phase, vmax=lim_phase)
+        im2 = ax[1].imshow(
+            pred[0, 1], cmap="radionets.PuOr", vmin=-lim_phase, vmax=lim_phase
+        )
         make_axes_nice(fig, ax[1], im2, "Imaginary")
 
         im3 = ax[2].imshow(img_true[0, 0], cmap="inferno")
         make_axes_nice(fig, ax[2], im3, "Org. Real")
 
-        im4 = ax[3].imshow(img_true[0, 1], cmap=OrBu, vmin=-lim_phase, vmax=lim_phase)
+        im4 = ax[3].imshow(
+            img_true[0, 1], cmap="radionets.PuOr", vmin=-lim_phase, vmax=lim_phase
+        )
         make_axes_nice(fig, ax[3], im4, "Org. Imaginary")
 
         fig.tight_layout(pad=0.1)
@@ -160,7 +163,9 @@ class CometCallback(Callback):
         im1 = ax[0].imshow(ifft_pred, vmax=ifft_truth.max(), cmap="inferno")
         im2 = ax[1].imshow(ifft_truth, cmap="inferno")
         a = check_vmin_vmax(ifft_pred - ifft_truth)
-        im3 = ax[2].imshow(ifft_pred - ifft_truth, cmap=OrBu, vmin=-a, vmax=a)
+        im3 = ax[2].imshow(
+            ifft_pred - ifft_truth, cmap="radionets.PuOr", vmin=-a, vmax=a
+        )
 
         make_axes_nice(fig, ax[0], im1, "FFT Prediction")
         make_axes_nice(fig, ax[1], im2, "FFT Truth")
