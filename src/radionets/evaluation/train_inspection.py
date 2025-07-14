@@ -33,18 +33,7 @@ from radionets.evaluation.utils import (
     save_pred,
     symmetry,
 )
-from radionets.plotting.hist import (
-    hist_point,
-    histogram_area,
-    histogram_dynamic_ranges,
-    histogram_gan_sources,
-    histogram_jet_angles,
-    histogram_mean_diff,
-    histogram_ms_ssim,
-    histogram_peak_intensity,
-    histogram_sum_intensity,
-    histogram_unc,
-)
+from radionets.plotting.hist import Hist
 from radionets.plotting.visualization import (
     plot_contour,
     plot_length_point,
@@ -388,7 +377,9 @@ def evaluate_viewing_angle(conf):
 
     click.echo("\nCreating histogram of jet angles.\n")
     dif = (alpha_preds - alpha_truths).numpy()
-    histogram_jet_angles(dif, out_path, plot_format=conf["format"])
+
+    Hist(out_path, plot_format=conf["format"]).jet_angles(dif)
+
     if conf["save_vals"]:
         click.echo("\nSaving jet angle offsets.\n")
         out = Path(conf["save_path"])
@@ -421,7 +412,7 @@ def evaluate_dynamic_range(conf):
     )
 
     click.echo("\nCreating histogram of dynamic ranges.\n")
-    histogram_dynamic_ranges(dr_truths, dr_preds, out_path, plot_format=conf["format"])
+    Hist(out_path, plot_format=conf["format"]).dynamic_ranges(dr_truths, dr_preds)
 
 
 def evaluate_ms_ssim(conf):
@@ -444,7 +435,8 @@ def evaluate_ms_ssim(conf):
         vals = np.append(vals, val)
 
     click.echo("\nCreating ms-ssim histogram.\n")
-    histogram_ms_ssim(vals, out_path, plot_format=conf["format"])
+
+    Hist(out_path, plot_format=conf["format"]).ms_ssim(vals)
 
     click.echo(f"\nThe mean ms-ssim value is {np.mean(vals)}.\n")
 
@@ -466,7 +458,8 @@ def evaluate_mean_diff(conf):
 
     click.echo("\nCreating mean_diff histogram.\n")
     vals = torch.tensor(vals) * 100
-    histogram_mean_diff(vals, out_path, plot_format=conf["format"])
+
+    Hist(out_path, plot_format=conf["format"]).mean_diff(vals)
 
     click.echo(f"\nThe mean difference is {vals.mean()}.\n")
 
@@ -583,7 +576,8 @@ def evaluate_ms_ssim_sampled(conf):
         vals = np.append(vals, val)
 
     click.echo("\nCreating ms-ssim histogram.\n")
-    histogram_ms_ssim(vals, out_path, plot_format=conf["format"])
+
+    Hist(out_path, plot_format=conf["format"]).ms_ssim(vals)
 
     click.echo(f"\nThe mean ms-ssim value is {vals.mean()}.\n")
 
@@ -612,7 +606,8 @@ def evaluate_area_sampled(conf):
 
     click.echo("\nCreating eval_area histogram.\n")
     vals = torch.tensor(vals)
-    histogram_area(vals, out_path, plot_format=conf["format"])
+
+    Hist(out_path, plot_format=conf["format"]).area(vals)
 
     click.echo(f"\nThe mean area ratio is {vals.mean()}.\n")
 
@@ -652,7 +647,7 @@ def evaluate_unc(conf):
             val = np.where(cond, 1, 0).sum() / img_true[i][mask[i]].shape * 100
             vals = np.append(vals, val)
 
-    histogram_unc(vals, out_path, plot_format=conf["format"])
+    Hist(out_path, plot_format=conf["format"]).unc(vals)
     if conf["save_vals"]:
         click.echo("\nSaving unc ratios.\n")
         out = Path(conf["save_path"])
@@ -680,8 +675,9 @@ def evaluate_intensity_sampled(conf):
         ratios_peak = np.append(ratios_peak, ratio_peak)
 
     click.echo("\nCreating eval_intensity histogram.\n")
-    histogram_sum_intensity(ratios_sum, out_path, plot_format=conf["format"])
-    histogram_peak_intensity(ratios_peak, out_path, plot_format=conf["format"])
+
+    Hist(out_path, plot_format=conf["format"]).sum_intensity(ratios_sum)
+    Hist(out_path, plot_format=conf["format"]).peak_intensity(ratios_peak)
 
     click.echo(f"\nThe mean intensity ratio is {ratios_sum.mean()}.\n")
     if conf["save_vals"]:
@@ -708,8 +704,8 @@ def evaluate_intensity(conf):
         ratios_peak = np.append(ratios_peak, ratio_peak)
 
     click.echo("\nCreating eval_intensity histogram.\n")
-    histogram_sum_intensity(ratios_sum, out_path, plot_format=conf["format"])
-    histogram_peak_intensity(ratios_peak, out_path, plot_format=conf["format"])
+    Hist(out_path, plot_format=conf["format"]).sum_intensity(ratios_sum)
+    Hist(out_path, plot_format=conf["format"]).peak_intensity(ratios_peak)
 
     click.echo(f"\nThe mean intensity ratio is {ratios_sum.mean()}.\n")
     if conf["save_vals"]:
@@ -736,7 +732,8 @@ def evaluate_area(conf):
 
     click.echo("\nCreating eval_area histogram.\n")
     vals = torch.tensor(vals)
-    histogram_area(vals, out_path, plot_format=conf["format"])
+
+    Hist(out_path, plot_format=conf["format"]).area(vals)
 
     click.echo(f"\nThe mean area ratio is {vals.mean()}.\n")
 
@@ -769,9 +766,12 @@ def evaluate_point(conf):
     mask = lengths < 10
 
     click.echo("\nCreating pointsources histogram.\n")
-    hist_point(vals, mask, out_path, plot_format=conf["format"])
+
+    Hist(out_path, plot_format=conf["format"]).point(vals, mask)
+
     click.echo(f"\nThe mean flux difference is {vals.mean()}.\n")
     click.echo("\nCreating linear extent-mean flux diff plot.\n")
+
     plot_length_point(lengths, vals, mask, out_path, plot_format=conf["format"])
 
 
@@ -816,14 +816,14 @@ def evaluate_gan_sources(conf):
     above_zeros = np.array([above_zeros]).reshape(-1)
     below_zeros = np.array([below_zeros]).reshape(-1)
     click.echo("\nCreating GAN histograms.\n")
-    histogram_gan_sources(
-        ratios,
-        num_zeros,
-        above_zeros,
-        below_zeros,
-        num_images,
-        out_path,
-        plot_format=conf["format"],
+
+    Hist(outpath=out_path, plot_format=conf["format"]).gan_sources(
+        ratio=ratios,
+        num_zero=num_zeros,
+        above_zero=above_zeros,
+        below_zero=below_zeros,
+        num_images=num_images,
     )
+
     click.echo(f"\nThe mean difference from maximum flux is {diff.mean()}.\n")
     click.echo(f"\nThe mean proportion of pixels close to 0 is {num_zeros.mean()}.\n")

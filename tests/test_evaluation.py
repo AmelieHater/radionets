@@ -2,11 +2,6 @@ import numpy as np
 import pytest
 from scipy.stats import truncnorm
 
-from torch.serialization import add_safe_globals
-from fastcore.foundation import L
-
-add_safe_globals([L])
-
 def truncnorm_moments(mu, sig, a, b):
     a, b = (a - mu) / sig, (b - mu) / sig
     sampled_gauss = truncnorm(a, b, loc=mu, scale=sig)
@@ -342,6 +337,8 @@ class TestEvaluation:
         assert ~np.isnan(above_zero)
         assert above_zero.dtype == "float64"
         assert np.isclose(below_zero + above_zero, 100)
+
+        print(evaluate_gan_sources(conf))
 
         assert evaluate_gan_sources(conf) is None
 
