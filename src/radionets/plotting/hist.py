@@ -43,11 +43,12 @@ class Hist:
     def _preproc_vals(
         self, vals: Union[torch.tensor, np.ndarray]
     ) -> tuple[np.ndarray, float, float]:
-        if hasattr(vals, "torch"):
+        if torch.is_tensor(vals):
             vals = vals.numpy()
 
         mean = vals.mean()
-        std = vals.std(ddof=1)
+        # NOTE: passing the mean to std() prevents its recalculation
+        std = vals.std(ddof=1, mean=mean)
 
         return vals, mean, std
 
@@ -81,51 +82,47 @@ class Hist:
         rect_2 = Rectangle((0, 0), **kwargs)
         return rect_1, rect_2
 
-    @classmethod
     def area(
-        cls,
+        self,
         vals: torch.tensor,
         bins: int = 30,
         return_fig: bool = False,
     ):
-        cls = cls()
-        vals, mean, std = cls._preproc_vals(vals)
+        vals, mean, std = self._preproc_vals(vals)
 
         fig, ax = plt.subplots(1, figsize=(6, 4))
 
         ax.hist(
             vals,
             bins=bins,
-            **cls.hist_kwargs,
+            **self.hist_kwargs,
         )
         ax.axvline(1, color="red", linestyle="dashed")
         ax.set(xlabel="Ratio of areas", ylabel="Number of sources")
 
-        cls._add_mean_std_text(ax, mean, std)
+        self._add_mean_std_text(ax, mean, std)
 
         if return_fig:
             return fig, ax
 
-        outpath = str(cls.outpath) + f"/hist_area.{cls.plot_format}"
-        fig.savefig(outpath, **cls.save_kwargs)
+        outpath = str(self.outpath) + f"/hist_area.{self.plot_format}"
+        fig.savefig(outpath, **self.save_kwargs)
 
-    @classmethod
     def dynamic_ranges(
-        cls,
+        self,
         dr_truth: torch.tensor,
         dr_pred: torch.tensor,
         return_fig: bool = False,
     ):
-        cls = cls()
         fig, ax = plt.subplots(2, 1, figsize=(6, 12), layout="constrained")
-        ax[0].hist(dr_truth, 51, **cls.hist_kwargs)
+        ax[0].hist(dr_truth, 51, **self.hist_kwargs)
         ax[0].set(
             title="True Images",
             xlabel="Dynamic range",
             ylabel="Number of sources",
         )
 
-        ax[1].hist(dr_pred, 25, **cls.hist_kwargs)
+        ax[1].hist(dr_pred, 25, **self.hist_kwargs)
         ax[1].set(
             title="Predictions",
             xlabel="Dynamic range",
@@ -135,20 +132,17 @@ class Hist:
         if return_fig:
             return fig, ax
 
-        outpath = str(cls.outpath) + f"/dynamic_ranges.{cls.plot_format}"
-        fig.savefig(outpath, **cls.save_kwargs)
+        outpath = str(self.outpath) + f"/dynamic_ranges.{self.plot_format}"
+        fig.savefig(outpath, **self.save_kwargs)
 
-    @classmethod
     def gan_sources(
-        cls,
+        self,
         ratio,
         num_zero,
         above_zero,
         below_zero,
         num_images,
     ):
-        cls = cls()
-
         bins = np.arange(0, ratio.max() + 0.1, 0.1)
 
         fig, ax = plt.subplots(1, layout="constrained")
@@ -164,8 +158,8 @@ class Hist:
         )
         ax.legend(loc="best")
 
-        outpath = str(cls.outpath) + f"/ratio.{cls.plot_format}"
-        fig.savefig(outpath, **cls.save_kwargs)
+        outpath = str(self.outpath) + f"/ratio.{self.plot_format}"
+        fig.savefig(outpath, **self.save_kwargs)
 
         plt.close(fig)
 
@@ -182,8 +176,8 @@ class Hist:
         )
         ax.legend(loc="upper center")
 
-        outpath = str(cls.outpath) + f"/num_zeros.{cls.plot_format}"
-        fig.savefig(outpath, **cls.save_kwargs)
+        outpath = str(self.outpath) + f"/num_zeros.{self.plot_format}"
+        fig.savefig(outpath, **self.save_kwargs)
 
         plt.close(fig)
 
@@ -207,25 +201,23 @@ class Hist:
         )
         ax.legend(loc="upper center")
 
-        outpath = str(cls.outpath) + f"/above_below.{cls.plot_format}"
-        fig.savefig(outpath, **cls.save_kwargs)
+        outpath = str(self.outpath) + f"/above_below.{self.plot_format}"
+        fig.savefig(outpath, **self.save_kwargs)
 
-    @classmethod
-    def jet_angles(cls, vals: torch.tensor, return_fig: bool = False):
-        cls = cls()
-        vals, mean, std = cls._preproc_vals(vals)
+    def jet_angles(self, vals: torch.tensor, return_fig: bool = False):
+        vals, mean, std = self._preproc_vals(vals)
 
         fig, ax = plt.subplots(2, 1, figsize=(6, 8))
-        ax[0].hist(vals, 51, **cls.hist_kwargs)
+        ax[0].hist(vals, 51, **self.hist_kwargs)
         ax[0].set(
             xlabel="Offset / deg",
             ylabel="Number of sources",
         )
 
-        extra_1, extra_2 = cls._get_rect_patch()
+        extra_1, extra_2 = self._get_rect_patch()
         ax[0].legend([extra_1, extra_2], (f"Mean: {mean:.2f}", f"Std: {std:.2f}"))
 
-        ax[1].hist(vals[(vals > -10) & (vals < 10)], 25, **cls.hist_kwargs)
+        ax[1].hist(vals[(vals > -10) & (vals < 10)], 25, **self.hist_kwargs)
         ax[1].set(
             xticks=[-10, -7.5, -5, -2.5, 0, 2.5, 5, 7.5, 10],
             xlabel="Offset / deg",
@@ -235,11 +227,10 @@ class Hist:
         if return_fig:
             return fig, ax
 
-        outpath = str(cls.outpath) + f"/jet_offsets.{cls.plot_format}"
-        fig.savefig(outpath, **cls.save_kwargs)
+        outpath = str(self.outpath) + f"/jet_offsets.{self.plot_format}"
+        fig.savefig(outpath, **self.save_kwargs)
 
-    @classmethod
-    def jet_gaussian_distance(cls, dist: torch.tensor, return_fig: bool = False):
+    def jet_gaussian_distance(self, dist: torch.tensor, return_fig: bool = False):
         """
         Plotting the distances between predicted and true component of several images.
         Parameters
@@ -247,7 +238,7 @@ class Hist:
         dist: 2d array
             array of shape (n, 2), where n is the number of distances
         """
-        cls = cls()
+
         ran = [0, 50]
 
         fig, ax = plt.subplots(1, layout="constrained")
@@ -267,86 +258,78 @@ class Hist:
         if return_fig:
             return fig, ax
 
-        outpath = str(cls.outpath) + f"/hist_jet_gaussian_distance.{cls.plot_format}"
-        fig.savefig(outpath, **cls.save_kwargs)
+        outpath = str(self.outpath) + f"/hist_jet_gaussian_distance.{self.plot_format}"
+        fig.savefig(outpath, **self.save_kwargs)
 
-    @classmethod
-    def mean_diff(cls, vals: torch.tensor, return_fig: bool = False):
-        cls = cls()
-        vals, mean, std = cls._preproc_vals(vals)
+    def mean_diff(self, vals: torch.tensor, return_fig: bool = False):
+        vals, mean, std = self._preproc_vals(vals)
 
         fig, ax = plt.subplots(1, figsize=(6, 4))
 
-        ax.hist(vals, 51, **cls.hist_kwargs)
+        ax.hist(vals, 51, **self.hist_kwargs)
         ax.set(
             xlabel="Mean flux deviation / %",
             ylabel="Number of sources",
         )
 
-        extra_1, extra_2 = cls._get_rect_patch()
+        extra_1, extra_2 = self._get_rect_patch()
         ax.legend([extra_1, extra_2], (f"Mean: {mean:.2f}", f"Std: {std:.2f}"))
 
         if return_fig:
             return fig, ax
 
-        outpath = str(cls.outpath) + f"/mean_diff.{cls.plot_format}"
-        fig.savefig(outpath, **cls.save_kwargs)
+        outpath = str(self.outpath) + f"/mean_diff.{self.plot_format}"
+        fig.savefig(outpath, **self.save_kwargs)
 
-    @classmethod
     def ms_ssim(
-        cls,
+        self,
         vals: torch.tensor,
         bins: int = 30,
         return_fig: bool = False,
     ):
-        cls = cls()
-        vals, mean, std = cls._preproc_vals(vals)
+        vals, mean, std = self._preproc_vals(vals)
 
         fig, ax = plt.subplots(1, figsize=(6, 4), layout="constrained")
-        ax.hist(vals, bins=bins, **cls.hist_kwargs)
+        ax.hist(vals, bins=bins, **self.hist_kwargs)
         ax.set(
             xlabel="ms ssim",
             ylabel="Number of sources",
         )
 
-        cls._add_mean_std_text(ax, mean, std)
+        self._add_mean_std_text(ax, mean, std)
 
         if return_fig:
             return fig, ax
 
-        outpath = str(cls.outpath) + f"/ms_ssim.{cls.plot_format}"
-        fig.savefig(outpath, **cls.save_kwargs)
+        outpath = str(self.outpath) + f"/ms_ssim.{self.plot_format}"
+        fig.savefig(outpath, **self.save_kwargs)
 
-    @classmethod
     def peak_intensity(
-        cls,
+        self,
         vals: torch.tensor,
         bins: int = 30,
         return_fig: bool = False,
     ):
-        cls = cls()
-        vals, mean, std = cls._preproc_vals(vals)
+        vals, mean, std = self._preproc_vals(vals)
 
         fig, ax = plt.subplots(1, figsize=(6, 4), layout="constrained")
 
-        ax.hist(vals, bins=bins, **cls.hist_kwargs)
+        ax.hist(vals, bins=bins, **self.hist_kwargs)
         ax.axvline(1, color="red", linestyle="dashed")
         ax.set(
             xlabel="Ratio of peak flux densities",
             ylabel="Number of sources",
         )
 
-        cls._add_mean_std_text(ax, mean, std)
+        self._add_mean_std_text(ax, mean, std)
 
         if return_fig:
             return fig, ax
 
-        outpath = str(cls.outpath) + f"/intensity_peak.{cls.plot_format}"
-        fig.savefig(outpath, **cls.save_kwargs)
+        outpath = str(self.outpath) + f"/intensity_peak.{self.plot_format}"
+        fig.savefig(outpath, **self.save_kwargs)
 
-    @classmethod
-    def point(cls, vals: torch.tensor, mask: torch.tensor, return_fig: bool = False):
-        cls = cls()
+    def point(self, vals: torch.tensor, mask: torch.tensor, return_fig: bool = False):
         binwidth = 5
         min_all = vals.min()
         bins = np.arange(min_all, 100 + binwidth, binwidth)
@@ -358,8 +341,8 @@ class Hist:
 
         fig, ax = plt.subplots(1, figsize=(6, 4), layout="constrained")
 
-        ax.hist(vals[mask], bins=bins, **cls.hist_kwargs)
-        ax.hist(vals[~mask], bins=bins, **cls.hist_kwargs)
+        ax.hist(vals[mask], bins=bins, **self.hist_kwargs)
+        ax.hist(vals[~mask], bins=bins, **self.hist_kwargs)
 
         ax.axvline(0, linestyle="dotted", color="red")
         ax.set(
@@ -367,7 +350,7 @@ class Hist:
             ylabel="Number of sources",
         )
 
-        extra_1, extra_2 = cls._get_rect_patch()
+        extra_1, extra_2 = self._get_rect_patch()
         ax.legend(
             [extra_1, extra_2],
             [
@@ -379,55 +362,51 @@ class Hist:
         if return_fig:
             return fig, ax
 
-        outpath = str(cls.outpath) + f"/hist_point.{cls.plot_format}"
-        fig.savefig(outpath, **cls.save_kwargs)
+        outpath = str(self.outpath) + f"/hist_point.{self.plot_format}"
+        fig.savefig(outpath, **self.save_kwargs)
 
-    @classmethod
     def sum_intensity(
-        cls,
+        self,
         vals: torch.tensor,
         bins: int = 30,
         return_fig: bool = False,
     ):
-        cls = cls()
-        vals, mean, std = cls._preproc_vals(vals)
+        vals, mean, std = self._preproc_vals(vals)
 
         fig, ax = plt.subplots(1, figsize=(6, 4), layout="constrained")
 
-        ax.hist(vals, bins=bins, **cls.hist_kwargs)
+        ax.hist(vals, bins=bins, **self.hist_kwargs)
         ax.axvline(1, color="red", linestyle="dashed")
         ax.set(
             xlabel="Ratio of integrated flux densities",
             ylabel="Number of sources",
         )
 
-        cls._add_mean_std_text(ax, mean, std)
+        self._add_mean_std_text(ax, mean, std)
 
         if return_fig:
             return fig, ax
 
-        outpath = str(cls.outpath) + f"/intensity_sum.{cls.plot_format}"
-        fig.savefig(outpath, **cls.save_kwargs)
+        outpath = str(self.outpath) + f"/intensity_sum.{self.plot_format}"
+        fig.savefig(outpath, **self.save_kwargs)
 
-    @classmethod
-    def unc(cls, vals: torch.tensor, return_fig: bool = False):
-        cls = cls()
-        vals, mean, std = cls._preproc_vals(vals)
+    def unc(self, vals: torch.tensor, return_fig: bool = False):
+        vals, mean, std = self._preproc_vals(vals)
 
         bins = np.arange(0, 105, 5)
 
         fig, ax = plt.subplots(1, figsize=(6, 4), layout="constrained")
 
-        ax.hist(vals, bins=bins, **cls.hist_kwargs)
+        ax.hist(vals, bins=bins, **self.hist_kwargs)
         ax.set(
             xlabel="Percentage of matching pixels",
             ylabel="Number of sources",
         )
 
-        cls._add_mean_std_text(ax, mean, std)
+        self._add_mean_std_text(ax, mean, std)
 
         if return_fig:
             return fig, ax
 
-        outpath = str(cls.outpath) + f"/hist_unc.{cls.plot_format}"
-        fig.savefig(outpath, **cls.save_kwargs)
+        outpath = str(self.outpath) + f"/hist_unc.{self.plot_format}"
+        fig.savefig(outpath, **self.save_kwargs)
