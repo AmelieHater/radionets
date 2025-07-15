@@ -61,16 +61,23 @@ def splitted_L1(x, y):
     return loss
 
 
-def beta_nll_loss(x, y, beta=0.5):
+def beta_nll_loss(x: torch.tensor, y: torch.tensor, beta: float = 0.5):
     """Compute beta-NLL loss
 
-    :param mean: Predicted mean of shape B x D
-    :param variance: Predicted variance of shape B x D
-    :param target: Target of shape B x D
-    :param beta: Parameter from range [0, 1] controlling relative
-    weighting between data points, where "0" corresponds to
-    high weight on low error points and "1" to an equal weighting.
-    :returns: Loss per batch element of shape B
+    Parameters
+    ----------
+    x : :func:`torch.tensor`
+        Prediction of the model.
+    y : :func:`torch.tensor`
+        Ground truth.
+    beta : float
+        Parameter from range [0, 1] controlling relative
+        weighting between data points, where "0" corresponds to
+        high weight on low error points and "1" to an equal weighting.
+
+    Returns
+    -------
+    float : Loss per batch element of shape B
     """
     pred_amp = x[:, 0, :]
     pred_phase = x[:, 2, :]

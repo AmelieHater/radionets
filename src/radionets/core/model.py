@@ -20,9 +20,16 @@ def init_cnn(m, uniform=False):
 
 def load_pre_model(learn, pre_path, visualize=False, plot_loss=False):
     """
-    :param learn:       object of type learner
-    :param pre_path:    string wich contains the path of the model
-    :param lr_find:     bool which is True if lr_find is used
+    Parameters
+    ----------
+    learn : learner
+        Object of type learner.
+    pre_path : str
+        Path to the pre-model.
+    visualize : bool
+        Default: False
+    plot_loss : bool
+        Default: False
     """
     name_pretrained = Path(pre_path).stem
     print(f"\nLoad pretrained model: {name_pretrained}\n")
