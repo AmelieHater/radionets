@@ -124,7 +124,7 @@ def get_normalisation_factors(data):
     std_real = []
     std_imag = []
 
-    for inp, true in tqdm(data.train_ds):
+    for inp, _ in tqdm(data.train_ds):
         mean_batch_imag = inp[1].mean()
         mean_batch_real = inp[0].mean()
         std_batch_imag = inp[1].std()
