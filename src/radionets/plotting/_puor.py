@@ -266,4 +266,5 @@ cm_data = [
 ]
 
 PuOr = ListedColormap(cm_data, name="radionets.PuOr", N=256)
+PuOr.set_bad("black")
 PuOr_r = PuOr.reversed()
