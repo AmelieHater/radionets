@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Dict, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,8 +13,8 @@ class Hist:
         self,
         outpath,
         plot_format: str = "png",
-        hist_kwargs: Optional[Dict] = None,
-        save_kwargs: Optional[Dict] = None,
+        hist_kwargs: dict | None = None,
+        save_kwargs: dict | None = None,
     ):
         self.outpath = outpath
         self.plot_format = plot_format
@@ -41,7 +40,7 @@ class Hist:
             )
 
     def _preproc_vals(
-        self, vals: Union[torch.tensor, np.ndarray]
+        self, vals: torch.tensor | np.ndarray
     ) -> tuple[np.ndarray, float, float]:
         if torch.is_tensor(vals):
             vals = vals.numpy()
@@ -68,7 +67,7 @@ class Hist:
             ),
         )
 
-    def _get_rect_patch(self) -> Union[Rectangle, Rectangle]:
+    def _get_rect_patch(self) -> Rectangle | Rectangle:
         kwargs = dict(
             width=1,
             height=1,
@@ -187,13 +186,13 @@ class Hist:
             above_zero,
             bins=bins,
             histtype="step",
-            label=f"Above, mean: {above_zero.mean():.2f}%, max: {above_zero.max():.2f}%",
+            label=f"Above, mean: {above_zero.mean():.2f}%, max: {above_zero.max():.2f}%",  # noqa: E501
         )
         ax.hist(
             below_zero,
             bins=bins,
             histtype="step",
-            label=f"Below, mean: {below_zero.mean():.2f}%, max: {below_zero.max():.2f}%",
+            label=f"Below, mean: {below_zero.mean():.2f}%, max: {below_zero.max():.2f}%",  # noqa: E501
         )
         ax.set(
             xlabel=r"Proportion of pixels below or above 0%",

@@ -3,11 +3,6 @@ from pathlib import Path
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-# # to prevent the localhost error from happening first change the backend and
-# # second turn off the interactive mode
-# mpl.use("Agg")
-# plt.ioff()
-
 
 def plot_loss(learn, model_path: str | Path, output_format: str = "png") -> None:
     """

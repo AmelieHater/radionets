@@ -196,7 +196,7 @@ def visualize_with_fourier(
         ax[4],
         im5,
         f"{__defaults['name'][4]} Input",
-        phase=True if amp_phase else False,
+        phase=bool(amp_phase),
     )
 
     im6 = ax[5].imshow(imag_pred, **kwargs[5])
@@ -205,7 +205,7 @@ def visualize_with_fourier(
         ax[5],
         im6,
         f"{__defaults['name'][5]} Prediction",
-        phase=True if amp_phase else False,
+        phase=bool(amp_phase),
     )
 
     im7 = ax[6].imshow(imag_truth, **kwargs[6])
@@ -214,7 +214,7 @@ def visualize_with_fourier(
         ax[6],
         im7,
         f"{__defaults['name'][6]} Truth",
-        phase=True if amp_phase else False,
+        phase=bool(amp_phase),
     )
 
     im8 = ax[7].imshow(imag_truth - imag_pred, **kwargs[7])
@@ -725,7 +725,7 @@ def plot_jet_components_results(inp, pred, truth, path, save=False, plot_format=
         for j in range(c):
             truth_max = torch.max(truth[i, j])
             fig, axs = plt.subplots(2, 2, sharex=True, sharey=True, figsize=(8, 7))
-            if not truth_max == 0:
+            if truth_max != 0:
                 pred_max = torch.max(pred[i, j])
                 axs[0, 0].contour(
                     X, Y, truth[i, j], levels=[truth_max * 0.32], colors="white"
@@ -822,14 +822,13 @@ def plot_fitgaussian(
         plt.text(
             0.95,
             0.02,
-            """
-        height : %.2f
-        x : %.1f
-        y : %.1f
-        width_x : %.1f
-        width_y : %.1f
-        theta : %.2f"""
-            % (height, x, y, width_x, width_y, theta),
+            f"""
+        height : {height:.2f}
+        x : {x:.1f}
+        y : {y:.1f}
+        width_x : {width_x:.1f}
+        width_y : {width_y:.1f}
+        theta : {theta:.2f}""",
             fontsize=8,
             horizontalalignment="right",
             c="w",
