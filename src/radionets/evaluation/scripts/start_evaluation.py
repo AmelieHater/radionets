@@ -52,13 +52,11 @@ def main(configuration_path):
             conf["inspection"][entry] is not False
             and isinstance(conf["inspection"][entry], bool)
             and entry != "random"
+        ) and (
+            not check_outpath(eval_conf["model_path"]) or conf["inspection"]["random"]
         ):
-            if (
-                not check_outpath(eval_conf["model_path"])
-                or conf["inspection"]["random"]
-            ):
-                create_predictions(eval_conf)
-                break
+            create_predictions(eval_conf)
+            break
 
     if eval_conf["unc"]:
         evaluate_unc(eval_conf)

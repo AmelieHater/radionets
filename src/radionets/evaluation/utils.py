@@ -226,10 +226,7 @@ def check_vmin_vmax(inp):
     float
         negative minimal or maximal value
     """
-    if np.abs(inp.min()) > np.abs(inp.max()):
-        a = -inp.min()
-    else:
-        a = inp.max()
+    a = -inp.min() if np.abs(inp.min()) > np.abs(inp.max()) else inp.max()
     return a
 
 
@@ -354,15 +351,9 @@ def get_ifft(array, amp_phase=False, scale=False):
         image(s) in image space
     """
     if len(array.shape) == 3:
-        if hasattr(array, "numpy"):
-            array = array.unsqueeze(0)
-        else:
-            array = array[np.newaxis, :]
+        array = array.unsqueeze(0) if hasattr(array, "numpy") else array[np.newaxis, :]
     if amp_phase:
-        if scale:
-            amp = 10 ** (10 * array[:, 0] - 10) - 1e-10
-        else:
-            amp = array[:, 0]
+        amp = 10 ** (10 * array[:, 0] - 10) - 1e-10 if scale else array[:, 0]
 
         a = amp * np.cos(array[:, 1])
         b = amp * np.sin(array[:, 1])
@@ -396,7 +387,7 @@ def read_pred(path):
     """
     images = {}
     with h5py.File(path, "r") as hf:
-        for key in hf.keys():
+        for key in hf:
             images[key] = np.array(hf[key])
         hf.close()
     return images
@@ -569,10 +560,7 @@ def sample_images(mean, std, num_samples, conf):
     std_amp, std_phase = std[:, 0], std[:, 1]
     num_img = mean_amp.shape[0]
 
-    if conf["amp_phase"]:
-        mode = ["amp", "phase"]
-    else:
-        mode = ["real", "imag"]
+    mode = ["amp", "phase"] if conf["amp_phase"] else ["real", "imag"]
 
     # amplitude
     sampled_gauss_amp = trunc_rvs(
