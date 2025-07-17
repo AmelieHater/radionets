@@ -61,7 +61,7 @@ class SRResNet(nn.Module):
 
     def _create_blocks(self, n_blocks):
         blocks = []
-        for i in range(n_blocks):
+        for _ in range(n_blocks):
             blocks.append(SRBlock(64, 64))
 
         self.blocks = nn.Sequential(*blocks)
