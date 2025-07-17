@@ -17,9 +17,10 @@ from radionets.core.callbacks import (
 from radionets.core.model import init_cnn
 
 
-def get_learner(
-    data, arch, lr, loss_func=nn.MSELoss(), cb_funcs=None, opt_func=Adam, **kwargs
-):
+def get_learner(data, arch, lr, loss_func=None, cb_funcs=None, opt_func=Adam, **kwargs):
+    if not loss_func:
+        loss_func = nn.MSELoss()
+
     init_cnn(arch)
     dls = DataLoaders.from_dsets(
         data.train_ds, data.valid_ds, bs=data.train_dl.batch_size
@@ -60,7 +61,7 @@ def define_learner(data, arch, train_conf, lr_find=False, plot_loss=False):
         cbfs.extend(
             [
                 SwitchLoss(
-                    second_loss=getattr(loss_functions, "comb_likelihood"),
+                    second_loss=loss_functions.comb_likelihood,
                     when_switch=train_conf["when_switch"],
                 ),
             ]

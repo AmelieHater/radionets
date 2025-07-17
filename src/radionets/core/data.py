@@ -1,6 +1,5 @@
 import re
 from pathlib import Path
-from typing import Optional
 
 import h5py
 import numpy as np
@@ -91,7 +90,7 @@ class DataBunch:
         self,
         train_dl: DataLoader,
         valid_dl: DataLoader,
-        num_classes: Optional[int] = None,
+        num_classes: int | None = None,
     ):
         self.train_dl = train_dl
         self.valid_dl = valid_dl

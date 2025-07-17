@@ -12,10 +12,8 @@ def get_ifft_torch(array, amp_phase=False, scale=False, uncertainty=False):
         array = array.unsqueeze(0)
 
     if amp_phase:
-        if scale:
-            amp = 10 ** (10 * array[:, 0] - 10) - 1e-10
-        else:
-            amp = array[:, 0]
+        amp = 10 ** (10 * array[:, 0] - 10) - 1e-10 if scale else array[:, 0]
+
         if uncertainty:
             a = amp * torch.cos(array[:, 2])
             b = amp * torch.sin(array[:, 2])

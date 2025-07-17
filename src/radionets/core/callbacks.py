@@ -72,9 +72,8 @@ class CometCallback(Callback):
         except AttributeError:
             pass
 
-        with self.experiment.test():
-            with torch.no_grad():
-                pred = eval_model(img_test, model)
+        with self.experiment.test(), torch.no_grad():
+            pred = eval_model(img_test, model)
 
         try:
             if self.learn.normalize.mode == "all":
@@ -130,9 +129,8 @@ class CometCallback(Callback):
         except AttributeError:
             pass
 
-        with self.experiment.test():
-            with torch.no_grad():
-                pred = eval_model(img_test, model)
+        with self.experiment.test(), torch.no_grad():
+            pred = eval_model(img_test, model)
 
         try:
             if self.learn.normalize.mode == "all":
@@ -234,10 +232,8 @@ class AvgLossCallback(Callback):
 
         train = np.array(self.loss_train)
         valid = np.array(self.loss_valid)
-        if len(train[train < 0]) == 0 or len(valid[valid < 0]) == 0:
-            return True
-        else:
-            return False
+
+        return bool(len(train[train < 0]) == 0 or len(valid[valid < 0]) == 0)
 
     def plot_lrs(self):
         plt.plot(self.lrs)
@@ -366,11 +362,10 @@ class GradientCallback(Callback):
         self.learn.loss.backward()
 
         # access gradients of weights of layers (with specified batch and epoch)
-        if self.epoch == self.num_epochs - 1:
-            if self.iter == self.n_iter - 1:
-                grads = []
-                for param in self.learn.model.parameters():
-                    grads.append(param.grad.view(-1))
+        if self.epoch == self.num_epochs - 1 and self.iter == self.n_iter - 1:
+            grads = []
+            for param in self.learn.model.parameters():
+                grads.append(param.grad.view(-1))
         # print or save
 
     def after_epoch(self):
