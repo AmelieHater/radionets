@@ -40,7 +40,7 @@ class Hist:
             )
 
     def _preproc_vals(
-        self, vals: torch.tensor | np.ndarray
+        self, vals: torch.Tensor | np.ndarray
     ) -> tuple[np.ndarray, float, float]:
         if torch.is_tensor(vals):
             vals = vals.numpy()
