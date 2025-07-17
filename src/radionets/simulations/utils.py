@@ -38,14 +38,7 @@ def check_outpath(outpath, data_format, quiet=False):
         samp = {p for p in path.rglob("*samp*." + str(data_format)) if p.is_file()}
         if fft:
             click.echo("Found existing fft_files!")
-            if quiet:
-                click.echo("Overwriting old fft_files!")
-                [p.unlink() for p in fft]
-                [p.unlink() for p in samp]
-                sim_fft = True
-                sim_sampled = True
-                return sim_fft, sim_sampled
-            elif click.confirm(
+            if quiet or click.confirm(
                 "Do you really want to overwrite the files?", abort=False
             ):
                 click.echo("Overwriting old fft_files!")
@@ -61,11 +54,7 @@ def check_outpath(outpath, data_format, quiet=False):
             sim_fft = True
         if samp:
             click.echo("Found existing samp_files!")
-            if quiet:
-                click.echo("Overwriting old samp_files!")
-                [p.unlink() for p in samp]
-                sim_sampled = True
-            elif click.confirm(
+            if quiet or click.confirm(
                 "Do you really want to overwrite the files?", abort=False
             ):
                 click.echo("Overwriting old samp_files!")

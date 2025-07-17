@@ -229,10 +229,8 @@ def plot_source(img, ft=False, log=False, ft2=False):
         cbar.set_label("Intensity / a.u.", size=20)
         cbar.ax.tick_params(labelsize=20)
     else:
-        if ft2:
-            img = np.abs(FT2(img))
-        else:
-            img = np.abs(FT(img))
+        img = np.abs(FT2(img)) if ft2 else np.abs(FT(img))
+
         ax.set_xlabel("u", fontsize=20)
         ax.set_ylabel("v", fontsize=20)
         if log is True:

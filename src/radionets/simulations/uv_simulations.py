@@ -323,10 +323,8 @@ def create_mask(u, v, size=64):
     """
     uv_hist, _, _ = np.histogram2d(u.ravel(), v.ravel(), bins=size)
     # exclude center
-    if size % 2 == 0:
-        limit = 2
-    else:
-        limit = 3
+    limit = 2 if size % 2 == 0 else 3
+
     ex_l = size // 2 - 2
     ex_h = size // 2 + limit
     uv_hist[ex_l:ex_h, ex_l:ex_h] = 0

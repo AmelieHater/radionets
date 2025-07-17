@@ -32,7 +32,7 @@ def create_path(path):
 
 
 def vlba_basic(center_lon=-110, center_lat=27.75):
-    layout = getattr(layouts, "vlba")
+    layout = layouts.vlba
     ant = Antenna(*layout())
     ant.to_geodetic(ant.X, ant.Y, ant.Z)
 

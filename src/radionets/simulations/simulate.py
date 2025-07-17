@@ -68,7 +68,7 @@ def sample_fft_images(sim_conf):
         bandwidths=sim_conf["bandwidths"],
         source_type=sim_conf["type"],
     )
-    if sim_conf["keep_fft_files"] is not True:
+    if sim_conf["keep_fft_files"] is not True:  # noqa: SIM102
         if click.confirm("Do you really want to delete the fft_files?", abort=False):
             fft = {
                 p

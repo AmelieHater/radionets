@@ -23,7 +23,7 @@ def simulate_gaussian_sources(
     std_imag,
     source_list,
 ):
-    for i in tqdm(range(num_bundles)):
+    for _ in tqdm(range(num_bundles)):
         grid = create_grid(img_size, bundle_size)
         list_sources = None
 
