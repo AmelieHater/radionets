@@ -38,6 +38,8 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: astral-sh/setup-uv@v6
+
       - name: Prepare mamba installation
         if: matrix.install-method == 'mamba' &&  contains(github.event.pull_request.labels.*.name, 'documentation-only') == false
         env:
@@ -103,7 +105,8 @@ jobs:
           sudo apt update --yes && sudo apt install --yes git
           uv pip install --system . -U pip towncrier
           uv pip install --system . --group docs -e .
-          uv git describe --tags
+          git describe --tags
+
 
       - name: Produce Changelog
         run: |
