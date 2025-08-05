@@ -7,6 +7,7 @@ import numpy as np
 import torch
 from fastai.callback.core import Callback, CancelBackwardException
 
+from radionets.core.logging import setup_logger
 from radionets.core.model import save_model
 from radionets.core.utils import _maybe_item, get_ifft_torch
 from radionets.evaluation.utils import (
@@ -33,6 +34,8 @@ __all__ = [
     "DataAug",
     "CudaCallback",
 ]
+
+LOGGER = setup_logger()
 
 
 class CometCallback(Callback):
@@ -330,7 +333,7 @@ class SaveTempCallback(Callback):
         if (self.epoch + 1) % 10 == 0:
             out = p / f"temp_{self.epoch + 1}.model"
             save_model(self, out)
-            print(f"\nFinished Epoch {self.epoch + 1}, model saved.\n")
+            LOGGER.info(f"Finished Epoch {self.epoch + 1}, model saved.")
 
 
 class SwitchLoss(Callback):

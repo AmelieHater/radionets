@@ -16,6 +16,8 @@ from radionets.core.callbacks import (
 )
 from radionets.core.model import init_cnn
 
+__all__ = ["get_learner", "define_learner"]
+
 
 def get_learner(data, arch, lr, loss_func=None, cb_funcs=None, opt_func=Adam, **kwargs):
     if not loss_func:

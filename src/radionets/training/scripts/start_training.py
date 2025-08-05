@@ -3,8 +3,10 @@ from pathlib import Path
 
 import click
 import toml
+from rich.pretty import pretty_repr
 
 from radionets.core.learner import define_learner
+from radionets.core.logging import setup_logger
 from radionets.core.model import load_pre_model
 from radionets.evaluation.train_inspection import after_training_plots
 from radionets.plotting.inspection import plot_loss, plot_lr, plot_lr_loss
@@ -17,6 +19,8 @@ from radionets.training.utils import (
     pop_interrupt,
     read_config,
 )
+
+LOGGER = setup_logger(tracebacks_suppress=[click])
 
 
 @click.command()
@@ -46,8 +50,8 @@ def main(configuration_path, mode):
     config = toml.load(configuration_path)
     train_conf = read_config(config)
 
-    click.echo("\n Train config:")
-    print(train_conf, "\n")
+    LOGGER.info("Train config:")
+    LOGGER.info(pretty_repr(train_conf))
 
     # create databunch
     data = create_databunch(
@@ -70,7 +74,7 @@ def main(configuration_path, mode):
         # check out path and look for existing model files
         check_outpath(train_conf["model_path"], train_conf)
 
-        click.echo("Start training of the model.\n")
+        LOGGER.info("Start training of the model.")
 
         # define_learner
         learn = define_learner(data, arch, train_conf)
@@ -98,7 +102,7 @@ def main(configuration_path, mode):
             after_training_plots(train_conf, rand=True)
 
     if mode == "fine_tune":
-        click.echo("Start fine tuning of the model.\n")
+        LOGGER.info("Start fine tuning of the model.")
 
         # define_learner
         learn = define_learner(
@@ -109,7 +113,7 @@ def main(configuration_path, mode):
 
         # load pretrained model
         if train_conf["pre_model"] == "none":
-            click.echo("Need a pre-trained modle for fine tuning!")
+            LOGGER.warning("Need a pre-trained modle for fine tuning!")
             return
 
         learn.create_opt()
@@ -126,7 +130,7 @@ def main(configuration_path, mode):
             after_training_plots(train_conf, rand=True)
 
     if mode == "lr_find":
-        click.echo("Start lr_find.\n")
+        LOGGER.info("Start lr_find.")
         if train_conf["normalize"] == "mean":
             train_conf["norm_factors"] = get_normalisation_factors(data)
 
@@ -150,7 +154,7 @@ def main(configuration_path, mode):
         )
 
     if mode == "plot_loss":
-        click.echo("Start plotting loss.\n")
+        LOGGER.info("Start plotting loss.")
 
         # define_learner
         learn = define_learner(data, arch, train_conf, plot_loss=True)
@@ -158,8 +162,8 @@ def main(configuration_path, mode):
         if Path(train_conf["model_path"]).exists:
             load_pre_model(learn, train_conf["model_path"], plot_loss=True)
         else:
-            click.echo("Selected model does not exist.")
-            click.echo("Exiting.\n")
+            LOGGER.warning("Selected model does not exist.")
+            LOGGER.info("Exiting.")
             sys.exit()
 
         plot_lr(

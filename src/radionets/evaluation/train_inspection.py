@@ -8,6 +8,7 @@ from pytorch_msssim import ms_ssim
 from tqdm import tqdm
 
 from radionets.core.data import load_data
+from radionets.core.logging import setup_logger
 from radionets.evaluation.blob_detection import calc_blobs, crop_first_component
 from radionets.evaluation.contour import analyse_intensity, area_of_contour
 from radionets.evaluation.dynamic_range import calc_dr
@@ -44,6 +45,8 @@ from radionets.plotting.visualization import (
     visualize_with_fourier_diff,
 )
 
+LOGGER = setup_logger(tracebacks_suppress=[click])
+
 
 def create_predictions(conf):
     if conf["model_path_2"] != "none":
@@ -59,7 +62,7 @@ def create_predictions(conf):
     out_path = str(out_path) + f"/predictions_{name_model}.h5"
 
     if not conf["fourier"]:
-        click.echo("\n This is not a fourier dataset.\n")
+        LOGGER.warning("This is not a fourier dataset.")
 
     save_pred(out_path, img)
 
@@ -292,7 +295,7 @@ def create_contour_plots(conf, num_images=3, rand=False):
     out_path = Path(model_path).parent / "evaluation"
 
     if not conf["fourier"]:
-        click.echo("\n This is not a fourier dataset.\n")
+        LOGGER.warning("This is not a fourier dataset.")
 
     img = read_pred(path)
 
@@ -375,13 +378,13 @@ def evaluate_viewing_angle(conf):
     alpha_truths = torch.tensor(alpha_truths)
     alpha_preds = torch.tensor(alpha_preds)
 
-    click.echo("\nCreating histogram of jet angles.\n")
+    LOGGER.info("Creating histogram of jet angles.")
     dif = (alpha_preds - alpha_truths).numpy()
 
     Hist(out_path, plot_format=conf["format"]).jet_angles(dif)
 
     if conf["save_vals"]:
-        click.echo("\nSaving jet angle offsets.\n")
+        LOGGER.info("Saving jet angle offsets.")
         out = Path(conf["save_path"])
         out.mkdir(parents=True, exist_ok=True)
         np.savetxt(out / "jet_angles.txt", dif)
@@ -402,16 +405,16 @@ def evaluate_dynamic_range(conf):
         dr_truths = np.append(dr_truths, dr_truth)
         dr_preds = np.append(dr_preds, dr_pred)
 
-    click.echo(
-        f"\nMean dynamic range for true source distributions:\
-            {round(dr_truths.mean())}\n"
+    LOGGER.info(
+        f"Mean dynamic range for true source distributions:\
+            {round(dr_truths.mean())}"
     )
-    click.echo(
-        f"\nMean dynamic range for predicted source distributions:\
-            {round(dr_preds.mean())}\n"
+    LOGGER.info(
+        f"Mean dynamic range for predicted source distributions:\
+            {round(dr_preds.mean())}"
     )
 
-    click.echo("\nCreating histogram of dynamic ranges.\n")
+    LOGGER.info("Creating histogram of dynamic ranges.")
     Hist(out_path, plot_format=conf["format"]).dynamic_ranges(dr_truths, dr_preds)
 
 
@@ -434,11 +437,11 @@ def evaluate_ms_ssim(conf):
         )
         vals = np.append(vals, val)
 
-    click.echo("\nCreating ms-ssim histogram.\n")
+    LOGGER.info("Creating ms-ssim histogram.")
 
     Hist(out_path, plot_format=conf["format"]).ms_ssim(vals)
 
-    click.echo(f"\nThe mean ms-ssim value is {np.mean(vals)}.\n")
+    LOGGER.info(f"The mean ms-ssim value is {np.mean(vals)}.")
 
 
 def evaluate_mean_diff(conf):
@@ -456,15 +459,15 @@ def evaluate_mean_diff(conf):
             flux_pred, flux_truth = crop_first_component(pred, truth, blobs_truth[0])
             vals.extend([(flux_pred.mean() - flux_truth.mean()) / flux_truth.mean()])
 
-    click.echo("\nCreating mean_diff histogram.\n")
+    LOGGER.info("Creating mean_diff histogram.")
     vals = torch.tensor(vals) * 100
 
     Hist(out_path, plot_format=conf["format"]).mean_diff(vals)
 
-    click.echo(f"\nThe mean difference is {vals.mean()}.\n")
+    LOGGER.info(f"The mean difference is {vals.mean()}.")
 
     if conf["save_vals"]:
-        click.echo("\nSaving mean differences.\n")
+        LOGGER.info("Saving mean differences.")
         out = Path(conf["save_path"])
         out.mkdir(parents=True, exist_ok=True)
         np.savetxt(out / "mean_diff.txt", vals)
@@ -481,7 +484,7 @@ def save_sampled(conf):
     samp_file = check_samp_file(conf)
     if samp_file:  # noqa: SIM102
         if click.confirm("Existing sampling file found. Overwrite?", abort=True):
-            click.echo("Overwriting sampling file!")
+            LOGGER.info("Overwriting sampling file!")
 
     img_size = loader.dataset[0][0][0].shape[-1]
     num_img = len(loader) * conf["batch_size"]
@@ -575,14 +578,14 @@ def evaluate_ms_ssim_sampled(conf):
         )
         vals = np.append(vals, val)
 
-    click.echo("\nCreating ms-ssim histogram.\n")
+    LOGGER.info("Creating ms-ssim histogram.")
 
     Hist(out_path, plot_format=conf["format"]).ms_ssim(vals)
 
-    click.echo(f"\nThe mean ms-ssim value is {vals.mean()}.\n")
+    LOGGER.info(f"The mean ms-ssim value is {vals.mean()}.")
 
     if conf["save_vals"]:
-        click.echo("\nSaving msssim ratios.\n")
+        LOGGER.info("Saving msssim ratios.")
         out = Path(conf["save_path"])
         out.mkdir(parents=True, exist_ok=True)
         np.savetxt(out / "msssim_ratios.txt", vals)
@@ -604,15 +607,15 @@ def evaluate_area_sampled(conf):
             val = area_of_contour(pred, truth)
             vals.extend([val])
 
-    click.echo("\nCreating eval_area histogram.\n")
+    LOGGER.info("Creating eval_area histogram.")
     vals = torch.tensor(vals)
 
     Hist(out_path, plot_format=conf["format"]).area(vals)
 
-    click.echo(f"\nThe mean area ratio is {vals.mean()}.\n")
+    LOGGER.info(f"The mean area ratio is {vals.mean()}.")
 
     if conf["save_vals"]:
-        click.echo("\nSaving area ratios.\n")
+        LOGGER.info("Saving area ratios.")
         out = Path(conf["save_path"])
         out.mkdir(parents=True, exist_ok=True)
         np.savetxt(out / "area_ratios.txt", vals)
@@ -649,7 +652,7 @@ def evaluate_unc(conf):
 
     Hist(out_path, plot_format=conf["format"]).unc(vals)
     if conf["save_vals"]:
-        click.echo("\nSaving unc ratios.\n")
+        LOGGER.info("Saving unc ratios.")
         out = Path(conf["save_path"])
         out.mkdir(parents=True, exist_ok=True)
         np.savetxt(out / "unc_ratios.txt", vals)
@@ -674,14 +677,14 @@ def evaluate_intensity_sampled(conf):
         ratios_sum = np.append(ratios_sum, ratio_sum)
         ratios_peak = np.append(ratios_peak, ratio_peak)
 
-    click.echo("\nCreating eval_intensity histogram.\n")
+    LOGGER.info("Creating eval_intensity histogram.")
 
     Hist(out_path, plot_format=conf["format"]).sum_intensity(ratios_sum)
     Hist(out_path, plot_format=conf["format"]).peak_intensity(ratios_peak)
 
-    click.echo(f"\nThe mean intensity ratio is {ratios_sum.mean()}.\n")
+    LOGGER.info(f"The mean intensity ratio is {ratios_sum.mean()}.")
     if conf["save_vals"]:
-        click.echo("\nSaving intensity ratios.\n")
+        LOGGER.info("Saving intensity ratios.")
         out = Path(conf["save_path"])
         out.mkdir(parents=True, exist_ok=True)
         np.savetxt(out / "sum_ratios.txt", ratios_sum)
@@ -703,13 +706,13 @@ def evaluate_intensity(conf):
         ratios_sum = np.append(ratios_sum, ratio_sum)
         ratios_peak = np.append(ratios_peak, ratio_peak)
 
-    click.echo("\nCreating eval_intensity histogram.\n")
+    LOGGER.info("Creating eval_intensity histogram.")
     Hist(out_path, plot_format=conf["format"]).sum_intensity(ratios_sum)
     Hist(out_path, plot_format=conf["format"]).peak_intensity(ratios_peak)
 
-    click.echo(f"\nThe mean intensity ratio is {ratios_sum.mean()}.\n")
+    LOGGER.info(f"The mean intensity ratio is {ratios_sum.mean()}.")
     if conf["save_vals"]:
-        click.echo("\nSaving intensity ratios.\n")
+        LOGGER.info("Saving intensity ratios.")
         out = Path(conf["save_path"])
         out.mkdir(parents=True, exist_ok=True)
         np.savetxt(out / "sum_ratios.txt", ratios_sum)
@@ -730,15 +733,15 @@ def evaluate_area(conf):
             val = area_of_contour(pred, truth)
             vals.extend([val])
 
-    click.echo("\nCreating eval_area histogram.\n")
+    LOGGER.info("Creating eval_area histogram.")
     vals = torch.tensor(vals)
 
     Hist(out_path, plot_format=conf["format"]).area(vals)
 
-    click.echo(f"\nThe mean area ratio is {vals.mean()}.\n")
+    LOGGER.info(f"The mean area ratio is {vals.mean()}.")
 
     if conf["save_vals"]:
-        click.echo("\nSaving area ratios.\n")
+        LOGGER.info("Saving area ratios.")
         out = Path(conf["save_path"])
         out.mkdir(parents=True, exist_ok=True)
         np.savetxt(out / "area_ratios.txt", vals)
@@ -765,12 +768,12 @@ def evaluate_point(conf):
     lengths = np.array(lengths, dtype="object")
     mask = lengths < 10
 
-    click.echo("\nCreating pointsources histogram.\n")
+    LOGGER.info("Creating pointsources histogram.")
 
     Hist(out_path, plot_format=conf["format"]).point(vals, mask)
 
-    click.echo(f"\nThe mean flux difference is {vals.mean()}.\n")
-    click.echo("\nCreating linear extent-mean flux diff plot.\n")
+    LOGGER.info(f"The mean flux difference is {vals.mean()}.")
+    LOGGER.info("Creating linear extent-mean flux diff plot.")
 
     plot_length_point(lengths, vals, mask, out_path, plot_format=conf["format"])
 
@@ -815,7 +818,7 @@ def evaluate_gan_sources(conf):
     num_zeros = np.array([num_zeros]).reshape(-1)
     above_zeros = np.array([above_zeros]).reshape(-1)
     below_zeros = np.array([below_zeros]).reshape(-1)
-    click.echo("\nCreating GAN histograms.\n")
+    LOGGER.info("Creating GAN histograms.")
 
     Hist(outpath=out_path, plot_format=conf["format"]).gan_sources(
         ratio=ratios,
@@ -825,5 +828,5 @@ def evaluate_gan_sources(conf):
         num_images=num_images,
     )
 
-    click.echo(f"\nThe mean difference from maximum flux is {diff.mean()}.\n")
-    click.echo(f"\nThe mean proportion of pixels close to 0 is {num_zeros.mean()}.\n")
+    LOGGER.info(f"The mean difference from maximum flux is {diff.mean()}.")
+    LOGGER.info(f"The mean proportion of pixels close to 0 is {num_zeros.mean()}.")

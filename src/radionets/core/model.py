@@ -3,19 +3,30 @@ from pathlib import Path
 import torch
 from torch import nn
 
+from radionets.core.logging import setup_logger
 
-def init_cnn_(m, f):
+__all__ = [
+    "init_cnn",
+    "load_pre_model",
+    "save_model",
+    "symmetry",
+]
+
+LOGGER = setup_logger()
+
+
+def _init_cnn(m, f):
     if isinstance(m, nn.Conv2d):
         f(m.weight, a=0.1)
         if getattr(m, "bias", None) is not None:
             m.bias.data.zero_()
     for c in m.children():
-        init_cnn_(c, f)
+        _init_cnn(c, f)
 
 
 def init_cnn(m, uniform=False):
     f = nn.init.kaiming_uniform_ if uniform else nn.init.kaiming_normal_
-    init_cnn_(m, f)
+    _init_cnn(m, f)
 
 
 def load_pre_model(learn, pre_path, visualize=False, plot_loss=False):
@@ -32,7 +43,8 @@ def load_pre_model(learn, pre_path, visualize=False, plot_loss=False):
         Default: False
     """
     name_pretrained = Path(pre_path).stem
-    print(f"\nLoad pretrained model: {name_pretrained}\n")
+    LOGGER.info(f"Load pretrained model: {name_pretrained}")
+
     if torch.cuda.is_available() and not plot_loss:
         checkpoint = torch.load(pre_path)
     else:

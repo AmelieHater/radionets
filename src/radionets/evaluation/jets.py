@@ -1,7 +1,10 @@
 import numpy as np
 from astropy.modeling import fitting, models
 
+from radionets.core.logging import setup_logger
 from radionets.plotting.visualization import plot_fitgaussian
+
+LOGGER = setup_logger()
 
 
 def fitgaussian_crop(data, amp_scale=0.97, crop_size=0.1):
@@ -83,9 +86,9 @@ def fitgaussian_iterativ(
         Fitted astropy model object
     """
     if visualize and path is None:
-        print("Visualize is True, but no path is given.")
+        LOGGER.warning("Visualize is True, but no path is given.")
     if not visualize and path is not None:
-        print("Visualize is False, but a path is given.")
+        LOGGER.warning("Visualize is False, but a path is given.")
 
     params_list = []
     fit_list = []

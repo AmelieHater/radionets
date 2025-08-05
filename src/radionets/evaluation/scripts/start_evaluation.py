@@ -1,8 +1,10 @@
 import click
 import numpy as np
 import toml
+from rich.pretty import pretty_repr
 
 from radionets.core.callbacks import PredictionImageGradient
+from radionets.core.logging import setup_logger
 from radionets.evaluation.train_inspection import (
     create_contour_plots,
     create_inspection_plots,
@@ -25,6 +27,8 @@ from radionets.evaluation.train_inspection import (
 )
 from radionets.evaluation.utils import check_outpath, check_samp_file, read_config
 
+LOGGER = setup_logger(tracebacks_suppress=[click])
+
 
 @click.command()
 @click.argument("configuration_path", type=click.Path(exists=True, dir_okay=False))
@@ -40,11 +44,11 @@ def main(configuration_path):
     conf = toml.load(configuration_path)
     eval_conf = read_config(conf)
 
-    click.echo("\nEvaluation config:")
-    print(eval_conf, "\n")
+    LOGGER.info("Evaluation config:")
+    LOGGER.info(pretty_repr(eval_conf))
 
     if eval_conf["sample_unc"]:
-        click.echo("Sampling test data set.\n")
+        LOGGER.info("Sampling test data set.")
         save_sampled(eval_conf)
 
     for entry in conf["inspection"]:
@@ -63,45 +67,45 @@ def main(configuration_path):
         create_uncertainty_plots(
             eval_conf, num_images=eval_conf["num_images"], rand=eval_conf["random"]
         )
-        click.echo(f"\nCreated {eval_conf['num_images']} uncertainty images.\n")
+        LOGGER.info(f"Created {eval_conf['num_images']} uncertainty images.")
 
     if eval_conf["vis_pred"]:
         create_inspection_plots(
             eval_conf, num_images=eval_conf["num_images"], rand=eval_conf["random"]
         )
 
-        click.echo(f"\nCreated {eval_conf['num_images']} test predictions.\n")
+        LOGGER.info(f"Created {eval_conf['num_images']} test predictions.")
 
     if eval_conf["vis_ms_ssim"]:
-        click.echo("\nVisualization of ms ssim is enabled for source plots.\n")
+        LOGGER.info("Visualization of ms ssim is enabled for source plots.")
 
     if eval_conf["vis_dr"]:
-        click.echo(f"\nCreated {eval_conf['num_images']} dynamic range plots.\n")
+        LOGGER.info(f"Created {eval_conf['num_images']} dynamic range plots.")
 
     if eval_conf["vis_source"]:
         create_source_plots(
             eval_conf, num_images=eval_conf["num_images"], rand=eval_conf["random"]
         )
 
-        click.echo(f"\nCreated {eval_conf['num_images']} source predictions.\n")
+        LOGGER.info(f"Created {eval_conf['num_images']} source predictions.")
 
     if eval_conf["plot_contour"]:
         create_contour_plots(
             eval_conf, num_images=eval_conf["num_images"], rand=eval_conf["random"]
         )
 
-        click.echo(f"\nCreated {eval_conf['num_images']} contour plots.\n")
+        LOGGER.info(f"Created {eval_conf['num_images']} contour plots.")
 
     if eval_conf["viewing_angle"]:
-        click.echo("\nStart evaluation of viewing angles.\n")
+        LOGGER.info("Start evaluation of viewing angles.")
         evaluate_viewing_angle(eval_conf)
 
     if eval_conf["dynamic_range"]:
-        click.echo("\nStart evaluation of dynamic ranges.\n")
+        LOGGER.info("Start evaluation of dynamic ranges.")
         evaluate_dynamic_range(eval_conf)
 
     if eval_conf["ms_ssim"]:
-        click.echo("\nStart evaluation of ms ssim.\n")
+        LOGGER.info("Start evaluation of ms ssim.")
         samp_file = check_samp_file(eval_conf)
         if samp_file:
             evaluate_ms_ssim_sampled(eval_conf)
@@ -109,7 +113,7 @@ def main(configuration_path):
             evaluate_ms_ssim(eval_conf)
 
     if eval_conf["intensity"]:
-        click.echo("\nStart evaluation of intensity.\n")
+        LOGGER.info("Start evaluation of intensity.")
         samp_file = check_samp_file(eval_conf)
         if samp_file:
             evaluate_intensity_sampled(eval_conf)
@@ -117,11 +121,11 @@ def main(configuration_path):
             evaluate_intensity(eval_conf)
 
     if eval_conf["mean_diff"]:
-        click.echo("\nStart evaluation of mean difference.\n")
+        LOGGER.info("Start evaluation of mean difference.")
         evaluate_mean_diff(eval_conf)
 
     if eval_conf["area"]:
-        click.echo("\nStart evaluation of the area.\n")
+        LOGGER.info("Start evaluation of the area.")
         samp_file = check_samp_file(eval_conf)
         if samp_file:
             evaluate_area_sampled(eval_conf)
@@ -129,7 +133,7 @@ def main(configuration_path):
             evaluate_area(eval_conf)
 
     if eval_conf["point"]:
-        click.echo("\nStart evaluation of point sources.\n")
+        LOGGER.info("Start evaluation of point sources.")
         evaluate_point(eval_conf)
 
     if eval_conf["predict_grad"]:
@@ -156,5 +160,5 @@ def main(configuration_path):
         np.savetxt("grads_y_phase.csv", grads_y[0][1].cpu().numpy(), delimiter=",")
 
     if eval_conf["gan"]:
-        click.echo("\nStart evaluation of GAN sources.\n")
+        LOGGER.info("Start evaluation of GAN sources.")
         evaluate_gan_sources(eval_conf)

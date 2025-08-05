@@ -7,9 +7,12 @@ from tqdm import tqdm
 
 from radionets import architecture
 from radionets.core.data import DataBunch, get_dls, load_data
+from radionets.core.logging import setup_logger
 from radionets.core.model import save_model
 from radionets.evaluation.train_inspection import create_inspection_plots
 from radionets.plotting.inspection import plot_loss
+
+LOGGER = setup_logger()
 
 
 def create_databunch(data_path, fourier, batch_size):
@@ -68,13 +71,13 @@ def check_outpath(model_path, train_conf):
     exists = path.exists()
     if exists:
         if train_conf["quiet"]:
-            click.echo("Overwriting existing model file!")
+            LOGGER.info("Overwriting existing model file!")
             path.unlink()
         else:
             if click.confirm(
                 "Do you really want to overwrite existing model file?", abort=True
             ):
-                click.echo("Overwriting existing model file!")
+                LOGGER.info("Overwriting existing model file!")
                 path.unlink()
 
 
@@ -95,7 +98,7 @@ def pop_interrupt(learn, train_conf):
     if click.confirm("KeyboardInterrupt, do you want to save the model?", abort=False):
         model_path = train_conf["model_path"]
         # save model
-        print(f"Saving the model after epoch {learn.epoch}")
+        LOGGER.info(f"Saving the model after epoch {learn.epoch}")
         save_model(learn, model_path)
 
         # plot loss
@@ -105,7 +108,7 @@ def pop_interrupt(learn, train_conf):
         if train_conf["inspection"]:
             create_inspection_plots(learn, train_conf)
     else:
-        print(f"Stopping after epoch {learn.epoch}")
+        LOGGER.info(f"Stopping after epoch {learn.epoch}")
 
     sys.exit(1)
 

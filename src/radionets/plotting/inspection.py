@@ -3,6 +3,10 @@ from pathlib import Path
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+from radionets.core.logging import setup_logger
+
+LOGGER = setup_logger()
+
 
 def plot_loss(learn, model_path: str | Path, output_format: str = "png") -> None:
     """
@@ -19,7 +23,7 @@ def plot_loss(learn, model_path: str | Path, output_format: str = "png") -> None
         model_path = Path(model_path)
 
     save_path = model_path.with_suffix("")
-    print(f"\nPlotting Loss for: {model_path.stem}\n")
+    LOGGER.info(f"Plotting Loss for: {model_path.stem}")
 
     logscale = learn.avg_loss.plot_loss()
     title = str(model_path.stem).replace("_", " ")
@@ -52,7 +56,7 @@ def plot_lr(learn, model_path: str | Path, output_format: str = "png") -> None:
         model_path = Path(model_path)
 
     save_path = model_path.with_suffix("")
-    print(f"\nPlotting Learning rate for: {model_path.stem}\n")
+    LOGGER.info(f"Plotting Learning rate for: {model_path.stem}")
 
     learn.avg_loss.plot_lrs()
 
@@ -82,7 +86,7 @@ def plot_lr_loss(
     if isinstance(out_path, str):
         out_path = Path(out_path)
 
-    print(f"\nPlotting Lr vs Loss for architecture: {arch_name}\n")
+    LOGGER.info(f"Plotting Lr vs Loss for architecture: {arch_name}")
 
     learn.recorder.plot_lr_find()
     out_path.mkdir(parents=True, exist_ok=True)
