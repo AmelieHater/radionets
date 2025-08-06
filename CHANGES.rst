@@ -1,3 +1,102 @@
+Radionets v0.4.0 (2025-08-06)
+=============================
+
+
+API Changes
+-----------
+
+
+Bug Fixes
+---------
+
+- - replaced variance with standard deviation [`#155 <https://github.com/radionets-project/radionets/pull/155>`__]
+
+- - compute uncertainty histogram on source pixels only
+  - check for existing sampling file before generating
+  - proper error propagation after using a normalization [`#164 <https://github.com/radionets-project/radionets/pull/164>`__]
+
+- - fix `evaluate_msssim_sampled`
+  - fix call of `evaluate_msssim_sampled` [`#171 <https://github.com/radionets-project/radionets/pull/171>`__]
+
+- - Fix legend handles missing in eval contour plot [`#175 <https://github.com/radionets-project/radionets/pull/175>`__]
+
+
+Data Model Changes
+------------------
+
+
+New Features
+------------
+
+- - added eval methods for sampled images [`#155 <https://github.com/radionets-project/radionets/pull/155>`__]
+
+- - add zenodo.json [`#161 <https://github.com/radionets-project/radionets/pull/161>`__]
+
+- - add new normalizing method which normalizes every image
+  - add saving options for more evaluation methods [`#165 <https://github.com/radionets-project/radionets/pull/165>`__]
+
+- - Added new block types for deep ResNets and UNets: :class:`~radionets.architecture.BottleneckResBlock`,
+    :class:`~radionets.architecture.Encoder`, and :class:`~radionets.architecture.Decoder`
+  - Introduced new submodules :mod:`~radionets.architecture.activation`,
+    :mod:`~radionets.architecture.archs`, and :mod:`~radionets.architecture.blocks`
+
+    - Related classes (e.g., blocks, activation functions) and functions are moved
+      from other submodules into these respective submodules
+    - Improves readability and reusability
+
+  - Added a logger that replaces bare prints throughout the code base
+  - Added new diverging colormap `radionets.PuOr` that is used for plotting in radionets [`#178 <https://github.com/radionets-project/radionets/pull/178>`__]
+
+- - Added docs with API references and user/dev guides [`#187 <https://github.com/radionets-project/radionets/pull/187>`__]
+
+
+Maintenance
+-----------
+
+- use mamba in tests [`#159 <https://github.com/radionets-project/radionets/pull/159>`__]
+
+- - add MANIFEST.in [`#160 <https://github.com/radionets-project/radionets/pull/160>`__]
+
+- - clean up docs/changes [`#163 <https://github.com/radionets-project/radionets/pull/163>`__]
+
+- - delete unused functions
+  - delete unsued architectures
+  - rename symmetry function [`#166 <https://github.com/radionets-project/radionets/pull/166>`__]
+
+- - add radionets logo to README [`#169 <https://github.com/radionets-project/radionets/pull/169>`__]
+
+- - fix `comet_ml` callback
+  - update `process_prediction` with better if statement
+  - change hardcoded values for sampling [`#170 <https://github.com/radionets-project/radionets/pull/170>`__]
+
+- - set number of bins for histogram plotting [`#171 <https://github.com/radionets-project/radionets/pull/171>`__]
+
+- - Update pyproject and python version support
+  - Switch to hatchling build backend [`#176 <https://github.com/radionets-project/radionets/pull/176>`__]
+
+- - Restructure dl_framework.architecture [`#177 <https://github.com/radionets-project/radionets/pull/177>`__]
+
+- - Flattened module hierarchy
+  - Refactord architecture into modular components, see new features
+  - Moved ``LocallyConnected2d`` class to :mod:`~radionets.architecture.unc_archs`
+  - Refactored some callback submodule
+
+    - Add error handling for cases where normalization attributes
+      (``self.learn.normalize.mode``) may not be defined
+    - Remove unnecessary calls to :func:`~radionets.simulations.visualize_simulations.create_OrBu`,
+      replace it with direct import of ``OrBu``
+
+  - Refactored plotting tools and grouped plotting functions into logical groups
+  - CI: Replaced pip with uv for package installation and added codecov test analytics [`#178 <https://github.com/radionets-project/radionets/pull/178>`__]
+
+
+Refactoring and Optimization
+----------------------------
+
+- - add keyword for half of the image
+  - distinguish between tensor and array in get_ifft
+  - fix micromamba installation [`#168 <https://github.com/radionets-project/radionets/pull/168>`__]
+
 Radionets 0.3.0 (2023-08-04)
 ============================
 

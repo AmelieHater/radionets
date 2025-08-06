@@ -1,3 +1,0 @@
-- delete unused functions
-- delete unsued architectures
-- rename symmetry function

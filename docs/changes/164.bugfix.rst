@@ -1,3 +1,0 @@
-- compute uncertainty histogram on source pixels only
-- check for existing sampling file before generating
-- proper error propagation after using a normalization
