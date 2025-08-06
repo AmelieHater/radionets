@@ -76,7 +76,7 @@ class TestEvaluation:
         test_torch = get_ifft(a, amp_phase=True)
         b = np.zeros([2, 64, 64])
         test_numpy = get_ifft(b, amp_phase=True)
-        print(test_numpy.shape)
+
         assert ~np.isnan([test_torch]).any()
         assert ~np.isnan([test_numpy]).any()
         assert len(test_torch.shape) == len(test_numpy.shape) + 1
@@ -337,8 +337,6 @@ class TestEvaluation:
         assert ~np.isnan(above_zero)
         assert above_zero.dtype == "float64"
         assert np.isclose(below_zero + above_zero, 100)
-
-        print(evaluate_gan_sources(conf))
 
         assert evaluate_gan_sources(conf) is None
 
