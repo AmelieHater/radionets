@@ -76,6 +76,7 @@ include:
 .. grid:: 1 2 2 3
 
     .. grid-item-card::
+        :class-item: animated-sd-card
 
         :octicon:`book;40px`
 
@@ -96,6 +97,7 @@ include:
 
 
     .. grid-item-card::
+        :class-item: animated-sd-card
 
         :octicon:`person-add;40px`
 
@@ -117,6 +119,7 @@ include:
 
 
     .. grid-item-card::
+        :class-item: animated-sd-card
 
         :octicon:`code;40px`
 

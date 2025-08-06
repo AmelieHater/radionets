@@ -13,7 +13,7 @@
   --pst-color-inline-code: var(--pst-color-primary-highlight);
   --bd-header-announcement-color: var(--pst-color-background);
   --bd-header-announcement-background: var(--pst-color-primary);
-  --table-hover-background: var(--pst-color-primary-highlight);
+  --table-hover-background: #fbac4f;
   --hl-pre-code-background: var(--pst-color-background);
   --color-header-navbar:  rgba(255, 255, 255, 0.65);
 }
@@ -28,7 +28,7 @@
   --pst-color-inline-code: var(--pst-color-primary-highlight);
   --bd-header-announcement-color: var(--pst-color-background);
   --bd-header-announcement-background: var(--pst-color-primary-highlight);
-  --table-hover-background: #279544;
+  --table-hover-background: #a074ab;
   --hl-pre-code-background: var(--pst-color-background);
   --color-header-navbar:  rgba(34, 40, 50, 0.65);
   --pst-color-inline-code-links: #d1617a;
