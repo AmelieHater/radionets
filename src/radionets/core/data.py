@@ -201,16 +201,16 @@ def load_data(data_path, mode, fourier=False):
 
     Parameters
     ----------
-    data_path: str
+    data_path : str
         path to data directory
-    mode: str
+    mode : str
         specify data set type, e.g. test
-    fourier: bool
+    fourier : bool
         use Fourier images as target if True, default is False
 
     Returns
     -------
-    test_ds: H5DataSet
+    test_ds : H5DataSet
         dataset containing x and y images
     """
     bundle_paths = get_bundles(data_path)

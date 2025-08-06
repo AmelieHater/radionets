@@ -11,24 +11,24 @@ def gaussian_component(x, y, flux, x_fwhm, y_fwhm, rot, center=None):
 
     Parameters
     ----------
-    x: 2darray
+    x : 2darray
         x coordinates of 2d meshgrid
-    y: 2darray
+    y : 2darray
         y coordinates of 2d meshgrid
-    flux: float
+    flux : float
         peak amplitude of component
-    x_fwhm: float
+    x_fwhm : float
         full-width-half-maximum in x direction (sigma_x)
-    y_fwhm: float
+    y_fwhm : float
         full-width-half-maximum in y direction (sigma_y)
-    rot: int
+    rot : int
         rotation of component in degree
-    center: 2darray
+    center : 2darray
         enter of component
 
     Returns
     -------
-    gauss: 2darray
+    gauss : 2darray
         2d grid with gaussian component
     """
     if center is None:

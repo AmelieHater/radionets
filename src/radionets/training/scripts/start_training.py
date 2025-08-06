@@ -38,14 +38,14 @@ def main(configuration_path, mode):
 
     Parameters
     ----------
-    configuration_path: str
+    configuration_path : str
         Path to the configuration toml file
 
-    Modes
+    Notes
     -----
-    train: start training of deep learning model (default option)
-    lr_find: execute learning rate finder
-    plot_loss: plot losscurve of existing model
+    train : start training of deep learning model (default option)
+    lr_find : execute learning rate finder
+    plot_loss : plot losscurve of existing model
     """
     config = toml.load(configuration_path)
     train_conf = read_config(config)

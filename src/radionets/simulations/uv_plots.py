@@ -25,14 +25,10 @@ def plot_uv_coverage(u, v):
 
     Parameters
     ----------
-    u: 1darray
+    u : 1darray
         array of u coordinates
-    v: 1darray
+    v : 1darray
         array of v coordinates
-
-    Returns
-    -------
-    None
     """
     plt.plot(u, v, marker="o", linestyle="none", markersize=2, color="#1f77b4")
     plt.xlabel(r"u / $\lambda$", fontsize=20)
@@ -46,12 +42,8 @@ def plot_baselines(antenna):
 
     Parameters
     ----------
-    antenna: antenna class object
+    antenna : antenna class object
         class object with antenna positions and baselines between telescopes
-
-    Returns
-    -------
-    None
     """
     x_base, y_base = antenna.get_baselines()
     plt.plot(
@@ -72,20 +64,16 @@ def plot_antenna_distribution(source_lon, source_lat, source, antenna, baselines
 
     Parameters
     ----------
-    source_lon: float
+    source_lon : float
         longitude of the source
-    source_lat: float
+    source_lat : float
         latitude of the source
-    source: source class object
+    source : source class object
         class object containing source position
-    antenna: antenna class object
+    antenna : antenna class object
         class object with antenna positions and baselines between telescopes
-    baselines: bool
+    baselines : bool
         enable baseline plotting
-
-    Returns
-    -------
-    None
     """
     x, y, z = source.to_ecef(val=[source_lon, source_lat])  # only use source ?
     x_enu_ant, y_enu_ant = antenna.to_enu(x, y, z)
@@ -128,18 +116,14 @@ def animate_baselines(source, antenna, filename, fps=5):
 
     Parameters
     ----------
-    source: source class object
+    source : source class object
         class object containing source position
-    antenna: antenna class object
+    antenna : antenna class object
         class object with antenna positions and baselines between telescopes
-    filename: str
+    filename : str
         name of the created gif
-    fps: int
+    fps : int
         frames per seconds of the gif
-
-    Returns
-    -------
-    None
     """
     s_lon = source.lon_prop
     s_lat = source.lat_prop
@@ -167,18 +151,14 @@ def animate_uv_coverage(source, antenna, filename, fps=5):
 
     Parameters
     ----------
-    source: source class object
+    source : source class object
         class object containing source position
-    antenna: antenna class object
+    antenna : antenna class object
         class object with antenna positions and baselines between telescopes
-    filename: str
+    filename : str
         name of the created gif
-    fps: int
+    fps : int
         frames per seconds of the gif
-
-    Returns
-    -------
-    None
     """
     u, v, steps = get_uv_coverage(source, antenna, iterate=True)
 
@@ -205,14 +185,10 @@ def plot_source(img, ft=False, log=False, ft2=False):
 
     Parameters
     ----------
-    img: 2darray
+    img : 2darray
         values of Gaussian source
-    ft: bool
+    ft : bool
         if True, the Fourier transformation (frequency space) of the image is plotted
-
-    Returns
-    -------
-    None
     """
     # plt.rcParams.update({"font.size": 18})
     fig = plt.figure(figsize=(8, 6))
@@ -273,12 +249,12 @@ def FT(img):
 
     Parameters
     ----------
-    img: 2darray
+    img : 2darray
         values of Gaussian source
 
     Returns
     -------
-    out: 2darray
+    2darray
         Fourier transform of input array
     """
     return np.fft.fftshift(np.fft.fft2(img))
@@ -290,12 +266,12 @@ def FT2(img):
 
     Parameters
     ----------
-    img: 2darray
+    img : 2darray
         values of Gaussian source
 
     Returns
     -------
-    out: 2darray
+    2darray
         Fourier transform of input array
     """
     return np.fft.ifft2(np.fft.ifftshift(img))
@@ -307,14 +283,14 @@ def apply_mask(img, mask):
 
     Parameters
     ----------
-    img: 2darray
+    img : 2darray
         values of Gaussian source
-    mask: bool
+    mask : bool
         mask for sampling frequencies
 
     Returns
     -------
-    out: 2darray
+    2darray
         array with sampled frequencies
     """
     img = img.copy()

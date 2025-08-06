@@ -30,7 +30,8 @@ def init_cnn(m, uniform=False):
 
 
 def load_pre_model(learn, pre_path, visualize=False, plot_loss=False):
-    """
+    """Loads a previously saved model as pre-model.
+
     Parameters
     ----------
     learn : learner

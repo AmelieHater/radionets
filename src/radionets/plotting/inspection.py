@@ -14,9 +14,9 @@ def plot_loss(learn, model_path: str | Path, output_format: str = "png") -> None
 
     Parameters
     ----------
-    learn: learner-object
+    learn : learner-object
         learner containing data and model
-    model_path: str
+    model_path : str
         path to trained model
     """
     if isinstance(model_path, str):
@@ -46,7 +46,7 @@ def plot_lr(learn, model_path: str | Path, output_format: str = "png") -> None:
 
     Parameters
     ----------
-    learn: learner-object
+    learn : learner-object
         learner containing data and model
     model_path : str or Path
         path to trained model
@@ -74,13 +74,13 @@ def plot_lr_loss(
 
     Parameters
     ----------
-    learn: learner-object
+    learn : learner-object
         learner containing data and model
-    arch_path: str
+    arch_path : str
         name of the architecture
-    out_path: str
+    out_path : str
         path to save loss plot
-    skip_last: int
+    skip_last : int
         skip n last points
     """
     if isinstance(out_path, str):

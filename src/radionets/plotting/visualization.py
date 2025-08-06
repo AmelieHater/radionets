@@ -245,11 +245,19 @@ def visualize_with_fourier_diff(
 ):
     """
     Visualizing, if the target variables are displayed in fourier space.
-    i: Current index given form the loop
-    img_input: current input image as a numpy array in shape (2*img_size^2)
-    img_pred: current prediction image as a numpy array with shape (2*img_size^2)
-    img_truth: current true image as a numpy array with shape (2*img_size^2)
-    out_path: str which contains the output path
+
+    Parameters
+    ----------
+    i : int
+        Current index given form the loop
+    img_input : array_like
+        Current input image as a numpy array in shape (2*img_size^2)
+    img_pred : array_like
+        Current prediction image as a numpy array with shape (2*img_size^2)
+    img_truth: array_like
+        Current true image as a numpy array with shape (2*img_size^2)
+    out_path: str
+        Which contains the output path
     """
     # reshaping and splitting in real and imaginary part if necessary
     real_pred, imag_pred = img_pred[0], img_pred[1]
@@ -659,13 +667,14 @@ def plot_jet_results(inp, pred, truth, path, save=False, plot_format="pdf"):
     """
     Plot input images, prediction, true and diff image of the overall prediction.
     (Not component wise)
+
     Parameters
     ----------
-    inp: n 4d arrays with 1 channel
+    inp : n 4d arrays with 1 channel
         input images
-    pred: n 4d arrays with multiple channels
+    pred : n 4d arrays with multiple channels
         predicted images
-    truth:n 4d arrays with multiple channels
+    truth : n 4d arrays with multiple channels
         true images
     """
     if truth.shape[1] > 2:
@@ -710,13 +719,14 @@ def plot_jet_results(inp, pred, truth, path, save=False, plot_format="pdf"):
 def plot_jet_components_results(inp, pred, truth, path, save=False, plot_format="pdf"):
     """
     Plot input images, prediction and true image.
+
     Parameters
     ----------
-    inp: n 4d arrays with 1 channel
+    inp : n 4d arrays with 1 channel
         input images
-    pred: n 4d arrays with multiple channels
+    pred : n 4d arrays with multiple channels
         predicted images
-    truth: n 4d arrays with multiple channels
+    truth : n 4d arrays with multiple channels
         true images
     """
     X, Y = np.meshgrid(np.arange(inp.shape[-1]), np.arange(inp.shape[-1]))
@@ -792,13 +802,14 @@ def plot_fitgaussian(
     """
     Plotting the sky image with the fitted gaussian distributian and the related
     parameters.
+
     Parameters
     ----------
-    data: 2d array
+    data : 2d array
         skymap, usually the prediction of the NN
-    fit: 2d array
+    fit : 2d array
         gaussian fit around the maxima
-    params: list
+    params : list
         parameters related to the gaussian: height, x, y, width_x, width_y, theta
     """
     fig, axs = plt.subplots(
@@ -848,12 +859,14 @@ def plot_fitgaussian(
 def plot_data(x, path, rows=1, cols=1, save=False, plot_format="pdf"):
     """
     Plotting image of the dataset
+
+    Parameters
     ----------
-    x: array
+    x : array
         array of shape (n, 1, size, size), n must be at least rows * cols
-    rows: int
+    rows : int
         number of rows in the plot
-    cols: int
+    cols : int
         number of cols in the plot
     """
     fig, ax = plt.subplots(

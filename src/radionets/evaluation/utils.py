@@ -144,8 +144,7 @@ def read_config(config):
 
 
 def reshape_2d(array):
-    """
-    Reshape 1d arrays into 2d ones.
+    """Reshape 1d arrays into 2d ones.
 
     Parameters
     ----------
@@ -164,6 +163,7 @@ def reshape_2d(array):
 def make_axes_nice(fig, ax, im, title, phase=False, phase_diff=False, unc=False):
     """Create nice colorbars with bigger label size for every axis in a subplot.
     Also use ticks for the phase.
+
     Parameters
     ----------
     fig : figure object
@@ -213,10 +213,10 @@ def make_axes_nice(fig, ax, im, title, phase=False, phase_diff=False, unc=False)
 
 
 def check_vmin_vmax(inp):
-    """
-    Check wether the absolute of the maxmimum or the minimum is bigger.
+    """Check wether the absolute of the maxmimum or the minimum is bigger.
     If the minimum is bigger, return value with minus. Otherwise return
     maximum.
+
     Parameters
     ----------
     inp : float
@@ -231,19 +231,18 @@ def check_vmin_vmax(inp):
 
 
 def load_pretrained_model(arch_name, model_path, img_size=63):
-    """
-    Load model architecture and pretrained weigths.
+    """Load model architecture and pretrained weigths.
 
     Parameters
     ----------
-    arch_name: str
+    arch_name : str
         name of the architecture
-    model_path: str
+    model_path : str
         path to pretrained model
 
     Returns
     -------
-    arch: architecture object
+    arch : architecture object
         architecture with pretrained weigths
     """
     if (
@@ -259,26 +258,25 @@ def load_pretrained_model(arch_name, model_path, img_size=63):
 
 
 def get_images(test_ds, num_images, rand=False, indices=None):
-    """
-    Get n random test and truth images or mean, standard deviation and
+    """Get n random test and truth images or mean, standard deviation and
     true images from an already sampled dataset.
 
     Parameters
     ----------
-    test_ds: H5DataSet
+    test_ds : H5DataSet
         data set with test images
-    num_images: int
+    num_images : int
         number of test images
-    rand: bool
+    rand : bool
         true if images should be drawn random
-    indices: list
+    indices : list
         list of indices to be used
 
     Returns
     -------
-    img_test: n 2d arrays
+    img_test : n 2d arrays
         test images
-    img_true: n 2d arrays
+    img_true : n 2d arrays
         truth images
     """
     if hasattr(test_ds, "tar_fourier"):
@@ -307,19 +305,18 @@ def get_images(test_ds, num_images, rand=False, indices=None):
 
 
 def eval_model(img, model):
-    """
-    Put model into eval mode and evaluate test images.
+    """Put model into eval mode and evaluate test images.
 
     Parameters
     ----------
-    img: str
+    img : str
         test image
-    model: architecture object
+    model : architecture object
         architecture with pretrained weigths
 
     Returns
     -------
-    pred: n 1d arrays
+    pred : n 1d arrays
         predicted images
     """
     if len(img.shape) == (3):
@@ -366,12 +363,7 @@ def get_ifft(array, amp_phase=False, scale=False):
 
 
 def save_pred(path, img):
-    """
-    write test data and predictions to h5 file
-    x: predictions of truth of test data
-    y: input image of the test data
-    z: truth of the test data
-    """
+    """Write test data and predictions to h5 file."""
     with h5py.File(path, "w") as hf:
         for key, value in img.items():
             hf.create_dataset(key, data=value)
@@ -379,12 +371,7 @@ def save_pred(path, img):
 
 
 def read_pred(path):
-    """
-    read data saved with save_pred from h5 file
-    x: predictions of truth of test data
-    y: input image of the test data
-    z: truth of the test data
-    """
+    """Read data saved with save_pred from h5 file."""
     images = {}
     with h5py.File(path, "r") as hf:
         for key in hf:
@@ -414,8 +401,7 @@ def check_outpath(model_path):
 
 
 def symmetry(image, key):
-    """
-    Symmetry function to complete the images
+    """Symmetry function to complete the images.
 
     Parameters
     ----------
@@ -449,8 +435,8 @@ def symmetry(image, key):
 
 
 def apply_symmetry(img_dict):
-    """
-    Pads and applies symmetry to half images. Takes a dict as input
+    """Pads and applies symmetry to half images.
+    Takes a dict as input.
 
     Parameters
     ----------
@@ -537,8 +523,9 @@ def trunc_rvs(mu, sig, num_samples, mode, target="cpu", nthreads=1):
 
 
 def sample_images(mean, std, num_samples, conf):
-    """Samples for every pixel in Fourier space from a truncated Gaussian distribution
-    based on the output of the network.
+    """Samples for every pixel in Fourier space from a
+    truncated Gaussian distribution based on the output
+    of the network.
 
     Parameters
     ----------
@@ -628,9 +615,7 @@ class sampled_dataset:
         self.bundle_path = bundle_path
 
     def __len__(self):
-        """
-        Returns the total number of pictures in this dataset
-        """
+        """Returns the total number of pictures in this dataset"""
         bundle = h5py.File(self.bundle_path, "r")
         data = bundle["mean"]
         return data.shape[0]
@@ -649,8 +634,8 @@ class sampled_dataset:
 
 
 def apply_normalization(img_test, norm_dict):
-    """
-    Applies one of currently two normalization methods if the training was normalized
+    """Applies one of currently two normalization
+    methods if the training was normalized
 
     Parameters
     ----------
@@ -709,8 +694,7 @@ def apply_normalization(img_test, norm_dict):
 
 
 def rescale_normalization(pred, norm_dict):
-    """
-    Rescale the prediction after normalized training
+    """Rescale the prediction after normalized training
 
     Parameters
     ----------
@@ -746,9 +730,8 @@ def rescale_normalization(pred, norm_dict):
 
 
 def preprocessing(conf):
-    """
-    Makes the necessary preprocessing for the evaluation methods analyzing the whole
-    test dataset
+    """Makes the necessary preprocessing for the evaluation
+    methods analyzing the whole test dataset.
 
     Parameters
     ----------
@@ -792,9 +775,8 @@ def preprocessing(conf):
 
 
 def process_prediction(conf, img_test, img_true, norm_dict, model, model_2):
-    """
-    Applies the normalization, gets and rescales a prediction and performs
-    the inverse Fourier transformation.
+    """Applies the normalization, gets and rescales a
+    prediction and performs the inverse Fourier transformation.
 
     Parameters
     ----------
@@ -840,8 +822,8 @@ def process_prediction(conf, img_test, img_true, norm_dict, model, model_2):
 
 
 def check_samp_file(eval_conf):
-    """
-    Checks if a file with sampled images is located in the evaluation folder
+    """Checks if a file with sampled images
+    is located in the evaluation folder
 
     Parameters
     ----------

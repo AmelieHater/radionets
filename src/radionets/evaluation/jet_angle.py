@@ -5,6 +5,7 @@ import torch
 
 def bmul(vec, mat, axis=0):
     """Expand vector for batchwise matrix multiplication.
+
     Parameters
     ----------
     vec : 2dtensor
@@ -23,21 +24,22 @@ def bmul(vec, mat, axis=0):
 
 
 def pca(image):
-    """
-    Compute the major components of an image. The Image is treated as a
+    """Compute the major components of an image. The Image is treated as a
     distribution.
+
     Parameters
     ----------
-    image: Image or 2DArray (N, M)
-            Image to be used as distribution
+    image : Image or 2DArray (N, M)
+        Image to be used as distribution
+
     Returns
     -------
-    cog_x: Skalar
-            X-position of the distributions center of gravity
-    cog_y: Skalar
-            Y-position of the distributions center of gravity
-    psi: Skalar
-            Angle between first mjor component and x-axis
+    cog_x :
+        X-position of the distributions center of gravity
+    cog_y :
+        Y-position of the distributions center of gravity
+    psi :
+        Angle between first mjor component and x-axis
     """
     torch.set_printoptions(precision=16)
 
@@ -71,6 +73,7 @@ def calc_jet_angle(image):
     ----------
     image : ndarray
         input image
+
     Returns
     -------
     float
@@ -122,23 +125,22 @@ def calc_jet_angle(image):
 
 
 def im_to_array_value(image):
-    """
-    Transforms the image to an array of pixel coordinates and the containt
+    """Transforms the image to an array of pixel coordinates and the containt
     intensity
 
     Parameters
     ----------
     image: Image or 2DArray (N, M)
-            Image to be transformed
+        Image to be transformed
 
     Returns
     -------
-    x_coords: Numpy 1Darray (N*M, 1)
-            Contains the x-pixel-position of every pixel in the image
-    y_coords: Numpy 1Darray (N*M, 1)
-            Contains the y-pixel-position of every pixel in the image
-    value: Numpy 1Darray (N*M, 1)
-            Contains the image-value corresponding to every x-y-pair
+    x_coords : array_like
+        Contains the x-pixel-position of every pixel in the image
+    y_coords: array_like
+        Contains the y-pixel-position of every pixel in the image
+    value: array_like
+        Contains the image-value corresponding to every x-y-pair
 
     """
     num = image.shape[0]
