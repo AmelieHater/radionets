@@ -2,11 +2,6 @@ import numpy as np
 import pytest
 from scipy.stats import truncnorm
 
-from torch.serialization import add_safe_globals
-from fastcore.foundation import L
-
-add_safe_globals([L])
-
 def truncnorm_moments(mu, sig, a, b):
     a, b = (a - mu) / sig, (b - mu) / sig
     sampled_gauss = truncnorm(a, b, loc=mu, scale=sig)
@@ -19,7 +14,7 @@ class TestEvaluation:
     def test_get_images(self):
         import torch
 
-        from radionets.dl_framework.data import load_data
+        from radionets.core.data import load_data
         from radionets.evaluation.utils import get_images
 
         test_ds = load_data(
@@ -81,7 +76,7 @@ class TestEvaluation:
         test_torch = get_ifft(a, amp_phase=True)
         b = np.zeros([2, 64, 64])
         test_numpy = get_ifft(b, amp_phase=True)
-        print(test_numpy.shape)
+
         assert ~np.isnan([test_torch]).any()
         assert ~np.isnan([test_numpy]).any()
         assert len(test_torch.shape) == len(test_numpy.shape) + 1

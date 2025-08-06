@@ -1,0 +1,12 @@
+- Flattened module hierarchy
+- Refactord architecture into modular components, see new features
+- Moved ``LocallyConnected2d`` class to :mod:`~radionets.architecture.unc_archs`
+- Refactored some callback submodule
+
+  - Add error handling for cases where normalization attributes
+    (``self.learn.normalize.mode``) may not be defined
+  - Remove unnecessary calls to :func:`~radionets.simulations.visualize_simulations.create_OrBu`,
+    replace it with direct import of ``OrBu``
+
+- Refactored plotting tools and grouped plotting functions into logical groups
+- CI: Replaced pip with uv for package installation and added codecov test analytics

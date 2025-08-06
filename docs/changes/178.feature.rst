@@ -1,0 +1,11 @@
+- Added new block types for deep ResNets and UNets: :class:`~radionets.architecture.BottleneckResBlock`,
+  :class:`~radionets.architecture.Encoder`, and :class:`~radionets.architecture.Decoder`
+- Introduced new submodules :mod:`~radionets.architecture.activation`,
+  :mod:`~radionets.architecture.archs`, and :mod:`~radionets.architecture.blocks`
+
+  - Related classes (e.g., blocks, activation functions) and functions are moved
+    from other submodules into these respective submodules
+  - Improves readability and reusability
+
+- Added a logger that replaces bare prints throughout the code base
+- Added new diverging colormap `radionets.PuOr` that is used for plotting in radionets

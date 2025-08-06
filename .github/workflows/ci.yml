@@ -55,6 +55,8 @@ jobs:
           environment-file: environment.yml
           cache-downloads: true
 
+      - uses: astral-sh/setup-uv@v6
+
       - name: Install dependencies
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
@@ -71,12 +73,18 @@ jobs:
 
       - name: Tests
         run: |
-          pytest -vv --cov --cov-report=xml
+          pytest -vv --cov --cov-report=xml --junitxml=junit.xml -o junit_family=legacy
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   docs:
     runs-on: ubuntu-latest
