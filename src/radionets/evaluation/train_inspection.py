@@ -364,7 +364,7 @@ def evaluate_viewing_angle(conf):
     alpha_preds = []
 
     # iterate trough DataLoader
-    for _, (img_test, img_true) in enumerate(tqdm(loader)):
+    for img_test, img_true in tqdm(loader):
         ifft_pred, ifft_truth = process_prediction(
             conf, img_test, img_true, norm_dict, model, model_2
         )
@@ -396,7 +396,7 @@ def evaluate_dynamic_range(conf):
     dr_preds = np.array([])
 
     # iterate trough DataLoader
-    for _, (img_test, img_true) in enumerate(tqdm(loader)):
+    for img_test, img_true in tqdm(loader):
         ifft_pred, ifft_truth = process_prediction(
             conf, img_test, img_true, norm_dict, model, model_2
         )
@@ -423,7 +423,7 @@ def evaluate_ms_ssim(conf):
     vals = np.array([])
 
     # iterate trough DataLoader
-    for _, (img_test, img_true) in enumerate(tqdm(loader)):
+    for img_test, img_true in tqdm(loader):
         ifft_pred, ifft_truth = process_prediction(
             conf, img_test, img_true, norm_dict, model, model_2
         )
@@ -449,7 +449,7 @@ def evaluate_mean_diff(conf):
     vals = []
 
     # iterate trough DataLoader
-    for _, (img_test, img_true) in enumerate(tqdm(loader)):
+    for img_test, img_true in tqdm(loader):
         ifft_pred, ifft_truth = process_prediction(
             conf, img_test, img_true, norm_dict, model, model_2
         )
@@ -498,7 +498,7 @@ def save_sampled(conf):
 
     results = {}
     # iterate trough DataLoader
-    for _, (img_test, img_true) in enumerate(tqdm(loader)):
+    for img_test, img_true in tqdm(loader):
         img_test, norm_dict = apply_normalization(img_test, norm_dict)
         pred = eval_model(img_test, model)
         pred = rescale_normalization(pred, norm_dict)
@@ -568,7 +568,7 @@ def evaluate_ms_ssim_sampled(conf):
     vals = np.array([])
 
     # iterate trough DataLoader
-    for _, (samp, _, img_true) in enumerate(tqdm(loader)):
+    for samp, _, img_true in tqdm(loader):
         val = ms_ssim(
             samp.unsqueeze(1),
             img_true.unsqueeze(1),
@@ -602,7 +602,7 @@ def evaluate_area_sampled(conf):
     vals = []
 
     # iterate trough DataLoader
-    for _, (samp, _, img_true) in enumerate(tqdm(loader)):
+    for samp, _, img_true in tqdm(loader):
         for pred, truth in zip(samp, img_true):
             val = area_of_contour(pred, truth)
             vals.extend([val])
@@ -632,7 +632,7 @@ def evaluate_unc(conf):
     vals = np.array([])
 
     # iterate trough DataLoader
-    for i, (samp, std, img_true) in enumerate(tqdm(loader)):
+    for samp, std, img_true in tqdm(loader):
         threshold = (img_true.max(-1)[0].max(-1)[0] * 0.01).reshape(
             img_true.shape[0], 1, 1
         )
@@ -670,7 +670,7 @@ def evaluate_intensity_sampled(conf):
     ratios_peak = np.array([])
 
     # iterate trough DataLoader
-    for _, (samp, _, img_true) in enumerate(tqdm(loader)):
+    for samp, _, img_true in tqdm(loader):
         samp = samp.numpy()
         img_true = img_true.numpy()
         ratio_sum, ratio_peak = analyse_intensity(samp, img_true)
@@ -697,7 +697,7 @@ def evaluate_intensity(conf):
     ratios_peak = np.array([])
 
     # iterate trough DataLoader
-    for _, (img_test, img_true) in enumerate(tqdm(loader)):
+    for img_test, img_true in tqdm(loader):
         ifft_pred, ifft_truth = process_prediction(
             conf, img_test, img_true, norm_dict, model, model_2
         )
@@ -724,7 +724,7 @@ def evaluate_area(conf):
     vals = []
 
     # iterate trough DataLoader
-    for _, (img_test, img_true) in enumerate(tqdm(loader)):
+    for img_test, img_true in tqdm(loader):
         ifft_pred, ifft_truth = process_prediction(
             conf, img_test, img_true, norm_dict, model, model_2
         )
@@ -752,7 +752,7 @@ def evaluate_point(conf):
     vals = []
     lengths = []
 
-    for _, (img_test, img_true, source_list) in enumerate(tqdm(loader)):
+    for img_test, img_true, source_list in tqdm(loader):
         ifft_pred, ifft_truth = process_prediction(
             conf, img_test, img_true, norm_dict, model, model_2
         )
