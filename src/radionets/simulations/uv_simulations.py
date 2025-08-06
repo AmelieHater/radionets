@@ -12,12 +12,13 @@ class Source:
     """
 
     def __init__(self, lon, lat):
-        """
+        """Initializes the source class.
+
         Paramters
         ---------
-        lon: float
+        lon : float
             longitude of source
-        lat: float
+        lat : float
             latitude of source
         """
         self.lon = lon
@@ -29,14 +30,14 @@ class Source:
 
         Parameters
         ----------
-        val: list with [lon, lat]
+        val : list with [lon, lat]
             A specific geodetic position
-        prop: bool
+        prop : bool
             use True on lists of propagated source positions, default is False
 
         Returns
         -------
-        x, y, z: 1darrays
+        x, y, z : 1darrays
             Positions in geocentric coordinates
         """
         if prop is True:
@@ -56,16 +57,16 @@ class Source:
 
         Parameters
         ----------
-        num_steps: int
+        num_steps : int
             number of propagation steps
-        multi_pointing: bool
+        multi_pointing : bool
             when True observation blocks are simulated, default is False
 
         Returns
         -------
-        lon: 1darray
+        lon : 1darray
             array with propagated lons
-        lat: 1darray
+        lat : 1darray
             array with propagated lats
         """
         if num_steps is None:
@@ -103,16 +104,16 @@ class Source:
 
         Parameters
         ----------
-        a: 1darray
+        a : 1darray
             array with coordinates
-        n: int
+        n : int
             number of deleted points
-        m: int
+        m : int
             range between two deletions
 
         Returns
         -------
-        a: 1darray
+        a : 1darray
             array with reduced coordinate points
         """
         return a[np.mod(np.arange(a.size), n + m) < n]
@@ -127,10 +128,11 @@ class Antenna:
     """
 
     def __init__(self, X, Y, Z):
-        """
+        """Initializes the class.
+
         Parameters
         ----------
-        X, Y, Z: array
+        X, Y, Z : array
             X, Y, Z coordinates of antennas
         """
         self.all = np.array(list(zip(X, Y, Z)))
@@ -146,9 +148,9 @@ class Antenna:
 
         Parameters
         ----------
-        x_ref, y_ref, z_ref: float
+        x_ref, y_ref, z_ref : float
             x, y, z reference positon
-        enu: bool
+        enu : bool
             when True:
         """
         import astropy.units as u
@@ -166,7 +168,7 @@ class Antenna:
 
         Returns
         -------
-        x_base, y_base: 1darrays
+        x_base, y_base : 1darrays
             x, y values of the baselines
         """
         x_base = []
@@ -197,7 +199,7 @@ class Antenna:
 
         Parameters
         ----------
-        x_ref, y_ref, z_ref: 1darrays
+        x_ref, y_ref, z_ref : 1darrays
             x, y, z reference coordinates
         """
         lon_ref, lat_ref = self.to_geodetic(x_ref, y_ref, z_ref, enu=True)
@@ -243,9 +245,9 @@ class Antenna:
 
         Returns
         -------
-        u, v: 1d arrays
+        u, v : 1d arrays
             u, v coordinates
-        steps: int
+        steps : int
             number of observation steps
         """
         u = []
@@ -275,20 +277,20 @@ def get_uv_coverage(source, antenna, multi_channel=False, bandwidths=4, iterate=
 
     Parameters
     ----------
-    source: source class object
+    source : source class object
         source class containing source positions
-    antenna: antenna clas object
+    antenna : antenna clas object
         antenna class containing antenna positions
-    iterate: bool
+    iterate : bool
         use True while creating (u, v)-coverage gif
 
     Returns
     -------
-    u: 1darray
+    u : 1darray
         u coordinates
-    v: 1darray
+    v : 1darray
         v coordinates
-    steps: 1darray
+    steps : 1darray
         number of observation steps
     """
     antenna.to_enu(*source.to_ecef(prop=True))
@@ -317,9 +319,9 @@ def get_uv_coverage(source, antenna, multi_channel=False, bandwidths=4, iterate=
 def create_mask(u, v, size=64):
     """Create 2d mask from a given (uv)-coverage
 
-    u: array of u coordinates
-    v: array of v coordinates
-    size: number of bins
+    u : array of u coordinates
+    v : array of v coordinates
+    size : number of bins
     """
     uv_hist, _, _ = np.histogram2d(u.ravel(), v.ravel(), bins=size)
     # exclude center
@@ -367,26 +369,26 @@ def sample_freqs(
 
     Parameters
     ----------
-    img: 2darray
+    img : 2darray
         2d Fourier space
-    ant_config: str
+    ant_config : str
         name of antenna config
-    size: int
+    size : int
         pixel size of input image, default 64x64 pixel
-    lon: float
+    lon : float
         start lon of source, if None: random start value between -90 and -70 is used
-    lat: float
+    lat : float
         start lat of source, if None a random start value between 30 and 80 is used
-    num_steps: int
+    num_steps : int
         number of observation steps
-    plot: bool
+    plot : bool
         if True: returns sampled Fourier spectrum and sampling mask
-    test_mask: bool
+    test_mask : bool
         if True: use same test mask for every image
 
     Returns
     -------
-    img: 2darray
+    img : 2darray
         sampled Fourier Spectrum
     """
 

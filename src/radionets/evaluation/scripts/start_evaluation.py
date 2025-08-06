@@ -38,7 +38,7 @@ def main(configuration_path):
 
     Parameters
     ----------
-    configuration_path: str
+    configuration_path : str
         Path to the configuration toml file
     """
     conf = toml.load(configuration_path)

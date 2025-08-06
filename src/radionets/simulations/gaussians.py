@@ -55,12 +55,12 @@ def create_grid(pixel, bundle_size):
 
     Parameters
     ----------
-    pixel: int
+    pixel : int
         number of pixel in x and y
 
     Returns
     -------
-    grid: ndarray
+    grid : ndarray
         2d grid with 1e-10 pixels, X meshgrid, Y meshgrid
     """
     x = np.linspace(0, pixel - 1, num=pixel)
@@ -82,27 +82,23 @@ def gauss_paramters():
     """
     Generate a random set of Gaussian parameters.
 
-    Parameters
-    ----------
-    None
-
     Returns
     -------
-    comps: int
+    comps : int
         Number of components
-    amp: float
+    amp : float
         Amplitude of the core component
-    x: array
+    x : array
         x positions of components
-    y: array
+    y : array
         y positions of components
-    sig_x:
+    sig_x :
         standard deviation in x
-    sig_y:
+    sig_y :
         standard deviation in y
-    rot: int
+    rot : int
         rotation in degree
-    sides: int
+    sides : int
         0 for one-sided and 1 for two-sided jets
     """
     # random number of components between 4 and 9
@@ -146,12 +142,12 @@ def create_rot_mat(alpha):
 
     Parameters
     ----------
-    alpha: float
+    alpha : float
         rotation angle in rad
 
     Returns
     -------
-    rot_mat: 2darray
+    rot_mat : 2darray
         2d rotation matrix
     """
     rot_mat = np.array(
@@ -166,24 +162,24 @@ def gaussian_component(x, y, flux, x_fwhm, y_fwhm, rot, center=None):
 
     Parameters
     ----------
-    x: 2darray
+    x : 2darray
         x coordinates of 2d meshgrid
-    y: 2darray
+    y : 2darray
         y coordinates of 2d meshgrid
-    flux: float
+    flux : float
         peak amplitude of component
-    x_fwhm: float
+    x_fwhm : float
         full-width-half-maximum in x direction (sigma_x)
-    y_fwhm: float
+    y_fwhm : float
         full-width-half-maximum in y direction (sigma_y)
-    rot: int
+    rot : int
         rotation of component in degree
-    center: 2darray
+    center : 2darray
         enter of component
 
     Returns
     -------
-    gauss: 2darray
+    gauss : 2darray
         2d grid with gaussian component
     """
     if center is None:
@@ -203,24 +199,24 @@ def add_gaussian(grid, amp, x, y, sig_x, sig_y, rot):
 
     Parameters
     ----------
-    grid: 2darray
+    grid : 2darray
         2d grid
-    amp: float
+    amp : float
         amplitude of gaussian component
-    x: float
+    x : float
         x position, will be calculated rel. to center
-    y: float
+    y : float
         y position, will be calculated rel. to center
-    sig_x: float
+    sig_x : float
         standard deviation in x
-    sig_y: float
+    sig_y : float
         standard deviation in y
-    rot: int
+    rot : int
         rotation in degree
 
     Returns
     -------
-    gaussian: 2darray
+    gaussian : 2darray
         grid with gaussian component
     """
     cent = np.array([len(grid[0]) // 2 + x, len(grid[0]) // 2 + y])
@@ -254,30 +250,30 @@ def create_gaussian_source(
 
     Parameters
     ----------
-    grid: ndarray
+    grid : ndarray
         2dgrid + X and Y meshgrid
-    comps: int
+    comps : int
         number of components
-    amp: 1darray
+    amp : 1darray
         amplitudes of components
-    x: 1darray
+    x : 1darray
         x positions of components
-    y: 1darray
+    y : 1darray
         y positions of components
-    sig_x: 1darray
+    sig_x : 1darray
         standard deviations of components in x
-    sig_y: 1darray
+    sig_y : 1darray
         standard deviations of components in y
-    rot: int
+    rot : int
         rotation of the jet in degree
-    sides: int
+    sides : int
         0 one-sided, 1 two-sided jet
-    blur: bool
+    blur : bool
         use Gaussian filter to blur image
 
     Returns
     -------
-    source: 2darray
+    source : 2darray
         2d grid containing Gaussian source
 
     Comments
@@ -314,12 +310,12 @@ def gaussian_source(grid):
 
     Parameters
     ----------
-    grid: nd array
+    grid : nd array
         array holding 2d grid and axis for one image
 
     Returns
     -------
-    s: 2darray
+    s : 2darray
        Image containing a simulated Gaussian source.
     """
     # grid = create_grid(img_size)
@@ -336,7 +332,7 @@ def create_ext_gauss_bundle(grid):
 
     Parameters
     ----------
-    grid: nd array
+    grid : nd array
         array holding 2d grid and axis for whole bundle
 
     Returns

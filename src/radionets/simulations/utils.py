@@ -127,14 +127,14 @@ def adjust_outpath(path, option, form="h5"):
 
     Parameters
     ----------
-    path: str
+    path : str
         path to save directory
-    option: str
+    option : str
         additional keyword to add to path
 
     Returns
     -------
-    out: str
+    out : str
         adjusted path
     """
     counter = 0
@@ -175,18 +175,18 @@ def get_noise(image, scale, mean=0, std=1):
 
     Parameters
     ----------
-    image: 2darray
+    image : 2darray
         2d image
-    scale: float
+    scale : float
         scaling factor to increase noise
-    mean: float
+    mean : float
         mean of noise values
-    std: float
+    std : float
         standard deviation of noise values
 
     Returns
     -------
-    out: ndarray
+    out : ndarray
         array with noise values in image shape
     """
     return np.random.normal(mean, std, size=image.shape) * scale
@@ -199,9 +199,9 @@ def add_noise(bundle, noise_level):
 
     Parameters
     ----------
-    bundle: path
+    bundle : path
         path to hdf5 bundle file
-    noise_level: int
+    noise_level : int
         noise level in percent
 
     Returns

@@ -107,6 +107,9 @@ jobs:
           uv pip install --system . --group docs -e .
           git describe --tags
 
+      - name: Build docs
+        run: make -C docs html
+
       - name: Produce Changelog
         run: |
           towncrier build --yes --version==0.0.0

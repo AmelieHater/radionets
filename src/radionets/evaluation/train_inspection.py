@@ -245,15 +245,22 @@ def after_training_plots(conf, num_images=3, rand=False, diff=True):
 
 
 def create_source_plots(conf, num_images=3, rand=False):
-    """
-    function for visualizing the output of a inverse fourier transform. For now, it is
-    necessary to take the absolute of the result of the inverse fourier transform,
-    because the output is complex.
-    i: current index of the loop, just used for saving
-    real_pred: real part of the prediction computed in visualize with fourier
-    imag_pred: imaginary part of the prediction computed in visualize with fourier
-    real_truth: real part of the truth computed in visualize with fourier
-    imag_truth: imaginary part of the truth computed in visualize with fourier
+    """function for visualizing the output of a inverse fourier
+    transform. For now, it is necessary to take the absolute of the
+    result of the inverse fourier transform, because the output is complex.
+
+    Parameters
+    ----------
+    i : int
+        current index of the loop, just used for saving
+    real_pred : array_like
+        real part of the prediction computed in visualize with fourier
+    imag_pred : array_like
+        imaginary part of the prediction computed in visualize with fourier
+    real_truth : array_like
+        real part of the truth computed in visualize with fourier
+    imag_truth : array_like
+        imaginary part of the truth computed in visualize with fourier
     """
     model_path = conf["model_path"]
     path = str(Path(model_path).parent / "evaluation")

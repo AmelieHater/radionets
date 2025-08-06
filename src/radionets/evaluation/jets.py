@@ -8,23 +8,23 @@ LOGGER = setup_logger()
 
 
 def fitgaussian_crop(data, amp_scale=0.97, crop_size=0.1):
-    """
-    Fitting a gaussian around the maximum
+    """Fitting a gaussian around the maximum
+
     Parameters
     ----------
-    data: 2d array
+    data : 2d array
         Image
-    amp_scale: float
+    amp_scale : float
         Reduces the fitted amplitude, encounters (partially) the problem
         of overlapping gaussians: amplitude in image is too high -> fit is too
         high -> next gaussian is shifted to the outside
-    crop_size: float
+    crop_size : float
         proportionate size of the image after cropping
 
 
     Returns
     -------
-    result_lmf: astropy model
+    result_lmf : astropy model
         Fitted astropy model object
     """
     size = data.shape[-1]
@@ -62,27 +62,27 @@ def fitgaussian_crop(data, amp_scale=0.97, crop_size=0.1):
 def fitgaussian_iterativ(
     data, i=0, visualize=False, path=None, save=False, plot_format="pdf"
 ):
-    """
-    Fitting a gaussian iteratively around the maxima.
+    """Fitting a gaussian iteratively around the maxima.
     Fit -> Substract -> Fit -> Substract ... until stopping criteria
+
     Parameters
     ----------
-    data: 2d array
+    data : 2d array
         Image
-    i: int
+    i : int
         Index of input image
-    visualize: bool
+    visualize : bool
         If the gauss should be plotted or not
-    path: string
+    path : string
         Path to where the image is saved
-    save: bool
+    save : bool
         If the image is saved in path or not
-    plot_format: str
+    plot_format : str
         Format of the saved filed (png, pdf, ...)
 
     Returns
     -------
-    result_lmf: astropy model
+    result_lmf : astropy model
         Fitted astropy model object
     """
     if visualize and path is None:

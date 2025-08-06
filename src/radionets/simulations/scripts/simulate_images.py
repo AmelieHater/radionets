@@ -12,7 +12,10 @@ def main(configuration_path):
     Generate monte carlo simulation data sets to train and test neural networks for
     reconstruction of radio interferometric data.
 
-    configuration_path: Path to the config toml file
+    Parameter
+    ---------
+    configuration_path : str
+        Path to the config toml file
     """
     config = toml.load(configuration_path)
 
