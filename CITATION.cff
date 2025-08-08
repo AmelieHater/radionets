@@ -14,10 +14,14 @@ date-released: 2020-11-11
 repository-code: "https://github.com/radionets-project/radionets"
 license: "MIT License"
 authors:
-- family-names: Schmidt
+- family-names: Schmitz
   given-names: Kevin
   affiliation: "TU Dortmund University, Germany"
   orcid: "https://orcid.org/0000-0002-9883-4454"
+- family-names: Knierim
+  given-names: Anno
+  affiliation: "TU Dortmund University, Germany"
+  orcid: "https://orcid.org/0009-0004-8728-2879"
 - family-names: Blomenkamp
   given-names: Paul-Simon Wilhelm
   affiliation: "TU Dortmund University, Germany"
