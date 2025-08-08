@@ -8,9 +8,7 @@ dynamic = ["version"]
 description = "Imaging radio interferometric data with neural networks"
 readme = "README.md"
 authors = [
-  { name = "Kevin Schmitz", email = "kevin2.schmitz@tu-dortmund.de" },
-  { name = "Felix Geyer" },
-  { name = "Anno Knierim", email = "anno.knierim@tu-dortmund.de" },
+  { name = "radionets Developers" },
 ]
 maintainers = [
   { name = "Kevin Schmitz", email = "kevin2.schmitz@tu-dortmund.de" },

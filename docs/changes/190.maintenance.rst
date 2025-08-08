@@ -1,0 +1,3 @@
+Update CITATION.cff
+
+Update authors
