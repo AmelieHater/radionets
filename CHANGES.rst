@@ -1,3 +1,33 @@
+Radionets v0.4.1 (2025-08-08)
+=============================
+
+
+API Changes
+-----------
+
+
+Bug Fixes
+---------
+
+
+Data Model Changes
+------------------
+
+
+New Features
+------------
+
+
+Maintenance
+-----------
+
+- Updated ``CITATION.cff`` [`#190 <https://github.com/radionets-project/radionets/pull/190>`__]
+- Updated authors [`#190 <https://github.com/radionets-project/radionets/pull/190>`__]
+
+
+Refactoring and Optimization
+----------------------------
+
 Radionets v0.4.0 (2025-08-06)
 =============================
 
