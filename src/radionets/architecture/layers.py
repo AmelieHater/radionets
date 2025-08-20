@@ -30,16 +30,17 @@ class LocallyConnected2d(nn.Module):
     Attributes
     ----------
     weight : nn.Parameter
-        Learnable weights with shape 
+        Learnable weights with shape
         (1, out_channels, in_channels, output_height, output_width, kernel_size²).
     bias : nn.Parameter or None
-        Learnable bias with shape 
+        Learnable bias with shape
         (1, out_channels, output_height, output_width) if bias=True, else None.
     kernel_size : tuple of int
         Kernel size as (height, width).
     stride : tuple of int
         Stride as (height, width).
     """
+
     def __init__(
         self, in_channels, out_channels, output_size, kernel_size, stride, bias=False
     ):
