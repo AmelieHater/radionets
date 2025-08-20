@@ -4,6 +4,42 @@ from torch.nn.modules.utils import _pair
 
 
 class LocallyConnected2d(nn.Module):
+    """
+    A 2D locally connected layer implementation.
+
+    Unlike convolutional layers that share weights across spatial locations,
+    locally connected layers use different weights for each spatial position.
+    This allows the layer to learn location-specific features while maintaining
+    the sliding window approach of convolutions.
+
+    Parameters
+    ----------
+    in_channels : int
+        Number of input channels.
+    out_channels : int
+        Number of output channels.
+    output_size : tuple of int
+        Expected output spatial dimensions as (height, width).
+    kernel_size : int
+        Size of the sliding window (assumes square kernel).
+    stride : int
+        Stride of the sliding window (assumes same stride for both dimensions).
+    bias : bool, optional
+        If True, adds a learnable bias parameter. Default is False.
+
+    Attributes
+    ----------
+    weight : nn.Parameter
+        Learnable weights with shape 
+        (1, out_channels, in_channels, output_height, output_width, kernel_size²).
+    bias : nn.Parameter or None
+        Learnable bias with shape 
+        (1, out_channels, output_height, output_width) if bias=True, else None.
+    kernel_size : tuple of int
+        Kernel size as (height, width).
+    stride : tuple of int
+        Stride as (height, width).
+    """
     def __init__(
         self, in_channels, out_channels, output_size, kernel_size, stride, bias=False
     ):
