@@ -1,0 +1,2 @@
+added docstrings for LocallyConnectedLayer
+added tests for LocallyConnectedLayer
