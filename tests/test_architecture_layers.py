@@ -1,6 +1,6 @@
 import torch
 
-from radionets.architectures.layers import LocallyConnected2d
+from radionets.architecture.layers import LocallyConnected2d
 
 torch.manual_seed(1)
 
