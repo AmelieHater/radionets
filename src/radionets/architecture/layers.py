@@ -177,8 +177,7 @@ class ComplexConv2d(nn.Module):
         Returns
         -------
         torch.Tensor
-            Output tensor of shape (batch_size, out_channels, out_height, out_width)
-            with the same complex dtype as input.
+            Output tensor of shape (batch_size, out_channels, out_height, out_width).
         """
         real, imag = x.chunk(2, dim=1)
 
@@ -292,8 +291,7 @@ class ComplexInstanceNorm2d(nn.Module):
         -------
         torch.Tensor
             Normalized tensor of the same shape as input
-            (batch_size, num_features, height, width). The tensor maintains
-            the same dtype and device as the input.
+            (batch_size, num_features, height, width).
 
         """
         # Split complex input into real and imaginary components
