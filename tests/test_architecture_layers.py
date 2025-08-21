@@ -947,3 +947,408 @@ class TestComplexInstanceNorm2dEdgeCases:
 
             assert torch.isfinite(output).all()
             assert output.shape == x.shape
+
+
+from radionets.architecture.layers import ComplexPReLU
+
+
+class TestComplexPReLU:
+    """Test suite for ComplexPReLU class."""
+
+    def test_init_basic(self):
+        """Test basic initialization of ComplexPReLU."""
+        prelu = ComplexPReLU(num_parameters=1, init=0.25)
+
+        # Check basic attributes
+        assert prelu.num_parameters == 1
+
+        # Check learnable parameters exist
+        assert hasattr(prelu, 'weight_real')
+        assert hasattr(prelu, 'weight_imag')
+        assert isinstance(prelu.weight_real, nn.Parameter)
+        assert isinstance(prelu.weight_imag, nn.Parameter)
+
+        # Check parameter shapes
+        assert prelu.weight_real.shape == (1,)
+        assert prelu.weight_imag.shape == (1,)
+
+        # Check parameter initialization
+        assert torch.allclose(prelu.weight_real, torch.tensor([0.25]))
+        assert torch.allclose(prelu.weight_imag, torch.tensor([0.25]))
+
+    def test_init_per_channel(self):
+        """Test initialization with per-channel parameters."""
+        num_params = 64
+        init_val = 0.1
+        prelu = ComplexPReLU(num_parameters=num_params, init=init_val)
+
+        assert prelu.num_parameters == num_params
+
+        # Check parameter shapes
+        assert prelu.weight_real.shape == (num_params // 2,)
+        assert prelu.weight_imag.shape == (num_params // 2,)
+
+        # Check parameter initialization
+        expected_tensor = torch.full((num_params // 2,), init_val)
+        assert torch.allclose(prelu.weight_real, expected_tensor)
+        assert torch.allclose(prelu.weight_imag, expected_tensor)
+
+    def test_init_different_values(self):
+        """Test initialization with different parameter values."""
+        init_values = [0.01, 0.1, 0.25, 0.5, 1.0]
+
+        for init_val in init_values:
+            prelu = ComplexPReLU(num_parameters=1, init=init_val)
+            assert torch.allclose(prelu.weight_real, torch.tensor([init_val]))
+            assert torch.allclose(prelu.weight_imag, torch.tensor([init_val]))
+
+    def test_forward_basic(self):
+        """Test basic forward pass."""
+        prelu = ComplexPReLU(num_parameters=1, init=0.25)
+
+        # Create input: batch_size=2, channels=8 (4 complex), height=4, width=4
+        batch_size, height, width = 2, 4, 4
+        x = torch.randn(batch_size, 8, height, width)
+
+        # Forward pass
+        output = prelu.forward(x)
+
+        # Check output shape and type
+        assert output.shape == (batch_size, 8, height, width)
+        assert output.dtype == x.dtype
+        assert output.device == x.device
+
+    def test_forward_positive_values_unchanged(self):
+        """Test that positive values remain unchanged."""
+        prelu = ComplexPReLU(num_parameters=1, init=0.2)
+
+        # Create input with known positive and negative values
+        x = torch.tensor([
+            [[[2.0, -1.0], [3.0, -2.0]], [[2.0, -1.0], [3.0, -2.0]]],
+            [[[1.5, -0.5], [-1.0, 4.0]], [[2.0, -1.0], [3.0, -2.0]]]
+        ])
+        print(x.shape)
+        output = prelu.forward(x)
+        real_out, imag_out = output.chunk(2, dim=1)
+        real_in, imag_in = x.chunk(2, dim=1)
+
+        # Check positive values are unchanged
+        assert torch.equal(real_out[real_in >= 0], real_in[real_in >= 0])
+        assert torch.equal(imag_out[imag_in >= 0], imag_in[imag_in >= 0])
+
+    def test_forward_negative_values_scaled(self):
+        """Test that negative values are properly scaled."""
+        init_val = 0.3
+        prelu = ComplexPReLU(num_parameters=1, init=init_val)
+
+        # Create input with known negative values
+        x = torch.tensor([
+            [[[-2.0, -1.0], [-3.0, -0.5]], [[-2.0, -1.0], [-3.0, -0.5]]],
+            [[[-1.5, -2.5], [-1.0, -4.0]], [[-2.0, -1.0], [-3.0, -0.5]]]
+        ])
+
+        output = prelu.forward(x)
+        real_out, imag_out = output.chunk(2, dim=1)
+        real_in, imag_in = x.chunk(2, dim=1)
+
+        # Check negative values are scaled by init_val
+        expected_real = real_in * init_val
+        expected_imag = imag_in * init_val
+
+        assert torch.allclose(real_out, expected_real, atol=1e-6)
+        assert torch.allclose(imag_out, expected_imag, atol=1e-6)
+
+    def test_forward_mixed_values(self):
+        """Test forward pass with mixed positive and negative values."""
+        init_val = 0.15
+        prelu = ComplexPReLU(num_parameters=1, init=init_val)
+
+        # Create input with mixed values
+        x = torch.tensor([
+            [[[2.0, -1.0], [-3.0, 4.0]], [[2.0, -1.0], [-3.0, 4.0]]],
+            [[[-1.5, 2.5], [1.0, -4.0]], [[-1.5, 2.5], [1.0, -4.0]]]
+        ])
+
+        output = prelu.forward(x)
+        real_out, imag_out = output.chunk(2, dim=1)
+        real_in, imag_in = x.chunk(2, dim=1)
+
+        # Manually compute expected output
+        expected_real = torch.where(real_in >= 0, real_in, init_val * real_in)
+        expected_imag = torch.where(imag_in >= 0, imag_in, init_val * imag_in)
+
+        assert torch.allclose(real_out, expected_real, atol=1e-6)
+        assert torch.allclose(imag_out, expected_imag, atol=1e-6)
+
+    def test_forward_per_channel_parameters(self):
+        """Test forward pass with per-channel parameters."""
+        num_channels = 8
+        prelu = ComplexPReLU(num_parameters=num_channels, init=0.2)
+
+        # Set different values for each channel
+        prelu.weight_real.data = torch.tensor([0.1, 0.2, 0.3, 0.4])
+        prelu.weight_imag.data = torch.tensor([0.15, 0.25, 0.35, 0.45])
+
+        # Create input with negative values
+        x = torch.abs(torch.randn(1, 8, 2, 2)) * -1
+
+        output = prelu.forward(x)
+        real_out, imag_out = output.chunk(2, dim=1)
+        real_in, imag_in = x.chunk(2, dim=1)
+
+        # Check that each channel is scaled by its respective parameter
+        for c in range(num_channels // 2):
+            expected_real_c = real_in[:, c:c+1] * prelu.weight_real[c]
+            expected_imag_c = imag_in[:, c:c+1] * prelu.weight_imag[c]
+
+            assert torch.allclose(real_out[:, c:c+1], expected_real_c, atol=1e-6)
+            assert torch.allclose(imag_out[:, c:c+1], expected_imag_c, atol=1e-6)
+
+    def test_forward_different_input_sizes(self):
+        """Test forward pass with different input sizes."""
+        prelu = ComplexPReLU(num_parameters=1, init=0.2)
+
+        # Test different input sizes
+        input_sizes = [
+            (1, 2, 1, 1),       # Single pixel, 1 complex channel
+            (1, 8, 4, 4),       # Small image, 4 complex channels
+            (4, 16, 8, 8),      # Medium batch and image
+            (2, 32, 16, 32),    # Large image, 16 complex channels
+        ]
+
+        for batch_size, channels, height, width in input_sizes:
+            x = torch.randn(batch_size, channels, height, width)
+            output = prelu.forward(x)
+
+            assert output.shape == (batch_size, channels, height, width)
+
+            # Verify activation properties
+            real_out, imag_out = output.chunk(2, dim=1)
+            real_in, imag_in = x.chunk(2, dim=1)
+
+            # Positive values should be unchanged
+            pos_real_mask = real_in >= 0
+            pos_imag_mask = imag_in >= 0
+            assert torch.equal(real_out[pos_real_mask], real_in[pos_real_mask])
+            assert torch.equal(imag_out[pos_imag_mask], imag_in[pos_imag_mask])
+
+    def test_chunk_operation(self):
+        """Test the chunk operation in forward method."""
+        prelu = ComplexPReLU(num_parameters=1, init=0.1)
+
+        # Create input
+        x = torch.randn(2, 16, 4, 4)  # 8 complex channels
+
+        # Forward pass
+        output = prelu.forward(x)
+
+        # Verify chunking worked correctly
+        real_part, imag_part = x.chunk(2, dim=1)
+        assert real_part.shape == (2, 8, 4, 4)  # Half the channels
+        assert imag_part.shape == (2, 8, 4, 4)  # Half the channels
+
+        # Output should maintain structure
+        real_out, imag_out = output.chunk(2, dim=1)
+        assert real_out.shape == (2, 8, 4, 4)
+        assert imag_out.shape == (2, 8, 4, 4)
+
+    def test_gradient_flow(self):
+        """Test that gradients flow properly through the activation."""
+        prelu = ComplexPReLU(num_parameters=1, init=0.2)
+
+        # Create input that requires grad
+        x = torch.randn(2, 8, 4, 4, requires_grad=True)
+
+        # Forward pass
+        output = prelu.forward(x)
+
+        # Create a simple loss
+        loss = output.sum()
+
+        # Backward pass
+        loss.backward()
+
+        # Check that gradients exist
+        assert x.grad is not None
+        assert prelu.weight_real.grad is not None
+        assert prelu.weight_imag.grad is not None
+
+        # Check that gradients are reasonable (non-zero for learnable parameters)
+        assert not torch.allclose(prelu.weight_real.grad, torch.zeros_like(prelu.weight_real.grad))
+        assert not torch.allclose(prelu.weight_imag.grad, torch.zeros_like(prelu.weight_imag.grad))
+
+    def test_gradient_flow_per_channel(self):
+        """Test gradient flow with per-channel parameters."""
+        num_channels = 16
+        prelu = ComplexPReLU(num_parameters=num_channels, init=0.1)
+
+        # Create input with both positive and negative values
+        x = torch.randn(2, 16, 4, 4, requires_grad=True)  # 8 real + 8 imag channels
+
+        # Forward pass
+        output = prelu.forward(x)
+
+        # Create loss that depends on all parameters
+        loss = (output ** 2).sum()
+
+        # Backward pass
+        loss.backward()
+
+        # Check gradients exist and have correct shape
+        assert prelu.weight_real.grad is not None
+        assert prelu.weight_imag.grad is not None
+        assert prelu.weight_real.grad.shape == (num_channels // 2,)
+        assert prelu.weight_imag.grad.shape == (num_channels // 2,)
+
+    def test_device_compatibility(self):
+        """Test that the module works on different devices."""
+        prelu = ComplexPReLU(num_parameters=1, init=0.2)
+
+        # Test on CPU
+        x_cpu = torch.randn(1, 8, 4, 4)
+        output_cpu = prelu.forward(x_cpu)
+        assert output_cpu.device.type == 'cpu'
+
+        # Test on GPU if available
+        if torch.cuda.is_available():
+            prelu_gpu = prelu.cuda()
+            x_gpu = x_cpu.cuda()
+            output_gpu = prelu_gpu.forward(x_gpu)
+            assert output_gpu.device.type == 'cuda'
+
+            # Results should be similar (allowing for minor numerical differences)
+            assert torch.allclose(output_cpu, output_gpu.cpu(), atol=1e-6)
+
+    def test_module_inheritance(self):
+        """Test that ComplexPReLU properly inherits from nn.Module."""
+        prelu = ComplexPReLU(num_parameters=4, init=0.1)
+
+        assert isinstance(prelu, nn.Module)
+
+        # Test that it can be added to a sequential model
+        model = nn.Sequential(
+            prelu,
+            nn.Flatten()
+        )
+
+        # Test parameter counting
+        params = list(prelu.parameters())
+        assert len(params) == 2  # weight_real, weight_imag
+
+        total_params = sum(p.numel() for p in prelu.parameters())
+        expected_params = 4
+        assert total_params == expected_params
+
+    def test_zero_input(self):
+        """Test behavior with zero input."""
+        prelu = ComplexPReLU(num_parameters=1, init=0.3)
+
+        x_zero = torch.zeros(2, 8, 4, 4)
+        output = prelu.forward(x_zero)
+
+        # Zero input should produce zero output
+        assert torch.allclose(output, torch.zeros_like(output))
+
+    def test_activation_properties(self):
+        """Test key properties of the PReLU activation."""
+        prelu = ComplexPReLU(num_parameters=1, init=0.2)
+
+        # Create test input
+        x = torch.randn(1, 4, 2, 2)
+        output = prelu.forward(x)
+
+        real_in, imag_in = x.chunk(2, dim=1)
+        real_out, imag_out = output.chunk(2, dim=1)
+
+        # Property 1: Positive values unchanged
+        pos_real_mask = real_in > 0
+        pos_imag_mask = imag_in > 0
+        assert torch.equal(real_out[pos_real_mask], real_in[pos_real_mask])
+        assert torch.equal(imag_out[pos_imag_mask], imag_in[pos_imag_mask])
+
+        # Property 2: Negative values scaled
+        neg_real_mask = real_in < 0
+        neg_imag_mask = imag_in < 0
+        if neg_real_mask.any():
+            assert torch.allclose(
+                real_out[neg_real_mask],
+                real_in[neg_real_mask] * 0.2,
+                atol=1e-6
+            )
+        if neg_imag_mask.any():
+            assert torch.allclose(
+                imag_out[neg_imag_mask],
+                imag_in[neg_imag_mask] * 0.2,
+                atol=1e-6
+            )
+
+        # Property 3: Function is piecewise linear
+        # This is inherently satisfied by the PReLU definition
+
+
+class TestComplexPReLUEdgeCases:
+    """Test edge cases and error conditions."""
+
+    def test_extreme_values(self):
+        """Test with extreme input values."""
+        prelu = ComplexPReLU(num_parameters=1, init=0.1)
+
+        # Test with very large values
+        x_large = torch.tensor([
+            [[[1e6, -1e6]]],  # Real part
+            [[[1e5, -1e5]]]   # Imaginary part
+        ])
+
+        output_large = prelu.forward(x_large)
+        assert torch.isfinite(output_large).all()
+
+        # Test with very small values
+        x_small = torch.tensor([
+            [[[1e-6, -1e-6]]],  # Real part
+            [[[1e-7, -1e-7]]]   # Imaginary part
+        ])
+
+        output_small = prelu.forward(x_small)
+        assert torch.isfinite(output_small).all()
+
+    def test_boundary_values(self):
+        """Test with boundary values (exactly zero)."""
+        prelu = ComplexPReLU(num_parameters=1, init=0.25)
+
+        # Input with exact zeros
+        x = torch.tensor([
+            [[[0.0, -1.0], [1.0, 0.0]]],  # Real part
+            [[[0.0, 1.0], [-1.0, 0.0]]]   # Imaginary part
+        ])
+
+        output = prelu.forward(x)
+        real_out, imag_out = output.chunk(2, dim=1)
+
+        # Zeros should remain zeros
+        zero_positions_real = (x[:, :1] == 0.0)
+        zero_positions_imag = (x[:, 1:] == 0.0)
+
+        assert torch.equal(real_out[zero_positions_real], torch.zeros_like(real_out[zero_positions_real]))
+        assert torch.equal(imag_out[zero_positions_imag], torch.zeros_like(imag_out[zero_positions_imag]))
+
+    def test_single_pixel_input(self):
+        """Test with single pixel input."""
+        prelu = ComplexPReLU(num_parameters=1, init=0.1)
+
+        x_single = torch.randn(1, 4, 1, 1)  # 2 complex channels, single pixel
+        output = prelu.forward(x_single)
+
+        assert output.shape == (1, 4, 1, 1)
+        assert torch.isfinite(output).all()
+
+    def test_large_num_parameters(self):
+        """Test with large number of parameters."""
+        num_params = 512
+        prelu = ComplexPReLU(num_parameters=num_params, init=0.05)
+
+        x = torch.randn(1, 2*num_params, 4, 4)  # Match the channel requirement
+        output = prelu.forward(x)
+
+        assert output.shape == x.shape
+        assert prelu.weight_real.shape == (num_params,)
+        assert prelu.weight_imag.shape == (num_params,)
