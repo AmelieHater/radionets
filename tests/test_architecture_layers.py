@@ -610,3 +610,340 @@ class TestComplexConv2dEdgeCases:
 
         # With "same" padding, output should have same spatial dimensions
         assert output.shape == (1, 2, 3, 3)
+
+
+from radionets.architecture.layers import ComplexInstanceNorm2d
+
+
+class TestComplexInstanceNorm2d:
+    """Test suite for ComplexInstanceNorm2d class."""
+
+    def test_init_basic(self):
+        """Test basic initialization of ComplexInstanceNorm2d."""
+        norm = ComplexInstanceNorm2d(num_features=64, eps=1e-5, affine=True)
+
+        # Check basic attributes
+        assert norm.num_features == 32  # num_features // 2 for complex channels
+        assert norm.eps == 1e-5
+        assert norm.affine == True
+
+        # Check learnable parameters exist
+        assert hasattr(norm, 'weight_real')
+        assert hasattr(norm, 'weight_imag')
+        assert hasattr(norm, 'bias_real')
+        assert hasattr(norm, 'bias_imag')
+
+        # Check parameter shapes
+        assert norm.weight_real.shape == (32,)
+        assert norm.weight_imag.shape == (32,)
+        assert norm.bias_real.shape == (32,)
+        assert norm.bias_imag.shape == (32,)
+
+        # Check parameter initialization
+        assert torch.allclose(norm.weight_real, torch.ones(32))
+        assert torch.allclose(norm.weight_imag, torch.ones(32))
+        assert torch.allclose(norm.bias_real, torch.zeros(32))
+        assert torch.allclose(norm.bias_imag, torch.zeros(32))
+
+    def test_init_no_affine(self):
+        """Test initialization without affine parameters."""
+        norm = ComplexInstanceNorm2d(num_features=32, eps=1e-6, affine=False)
+
+        assert norm.num_features == 16
+        assert norm.eps == 1e-6
+        assert norm.affine == False
+
+        # Check that affine parameters don't exist
+        assert not hasattr(norm, 'weight_real')
+        assert not hasattr(norm, 'weight_imag')
+        assert not hasattr(norm, 'bias_real')
+        assert not hasattr(norm, 'bias_imag')
+
+    def test_init_different_parameters(self):
+        """Test initialization with different parameter combinations."""
+        # Test small number of features
+        norm1 = ComplexInstanceNorm2d(num_features=8, eps=1e-4)
+        assert norm1.num_features == 4
+        assert norm1.eps == 1e-4
+
+        # Test large number of features
+        norm2 = ComplexInstanceNorm2d(num_features=512, eps=1e-7, affine=False)
+        assert norm2.num_features == 256
+        assert norm2.eps == 1e-7
+        assert norm2.affine == False
+
+    def test_forward_basic(self):
+        """Test basic forward pass."""
+        norm = ComplexInstanceNorm2d(num_features=64, eps=1e-5, affine=True)
+
+        # Create input: batch_size=2, channels=64 (32 complex), height=16, width=16
+        batch_size, height, width = 2, 16, 16
+        x = torch.randn(batch_size, 64, height, width)
+
+        # Forward pass
+        output = norm.forward(x)
+
+        # Check output shape and type
+        assert output.shape == (batch_size, 64, height, width)
+        assert output.dtype == x.dtype
+        assert output.device == x.device
+
+    def test_forward_normalization_properties(self):
+        """Test that forward pass produces properly normalized output."""
+        norm = ComplexInstanceNorm2d(num_features=32, eps=1e-5, affine=False)
+
+        # Create input with known statistics
+        x = torch.randn(4, 32, 8, 8) * 5.0 + 3.0  # Non-zero mean, large variance
+
+        # Forward pass
+        output = norm.forward(x)
+
+        # Split output into real and imaginary parts
+        real_out, imag_out = output.chunk(2, dim=1)
+
+        # Check normalization properties for each sample and channel
+        # Mean should be approximately zero
+        real_means = real_out.mean(dim=[2, 3])  # Mean over spatial dimensions
+        imag_means = imag_out.mean(dim=[2, 3])
+
+        assert torch.allclose(real_means, torch.zeros_like(real_means), atol=1e-6)
+        assert torch.allclose(imag_means, torch.zeros_like(imag_means), atol=1e-6)
+
+        # Standard deviation should be approximately 1
+        real_stds = real_out.std(dim=[2, 3], unbiased=False)
+        imag_stds = imag_out.std(dim=[2, 3], unbiased=False)
+
+        assert torch.allclose(real_stds, torch.ones_like(real_stds), atol=1e-5)
+        assert torch.allclose(imag_stds, torch.ones_like(imag_stds), atol=1e-5)
+
+    def test_forward_with_affine(self):
+        """Test forward pass with affine transformation."""
+        norm = ComplexInstanceNorm2d(num_features=16, eps=1e-5, affine=True)
+
+        # Modify affine parameters to test their effect
+        norm.weight_real.data.fill_(2.0)
+        norm.weight_imag.data.fill_(3.0)
+        norm.bias_real.data.fill_(1.0)
+        norm.bias_imag.data.fill_(-1.0)
+
+        # Create normalized input (mean=0, std=1)
+        x = torch.randn(2, 16, 4, 4)
+
+        # Forward pass
+        output = norm.forward(x)
+
+        # Split output
+        real_out, imag_out = output.chunk(2, dim=1)
+
+        # Check that affine transformation was applied
+        # For normalized input, output should have:
+        # real: mean ≈ 1.0, std ≈ 2.0
+        # imag: mean ≈ -1.0, std ≈ 3.0
+        real_means = real_out.mean(dim=[2, 3])
+        imag_means = imag_out.mean(dim=[2, 3])
+        real_stds = real_out.std(dim=[2, 3], unbiased=False)
+        imag_stds = imag_out.std(dim=[2, 3], unbiased=False)
+
+        assert torch.allclose(real_means, torch.ones_like(real_means), atol=1e-5)
+        assert torch.allclose(imag_means, -torch.ones_like(imag_means), atol=1e-5)
+        assert torch.allclose(real_stds, 2.0 * torch.ones_like(real_stds), atol=1e-5)
+        assert torch.allclose(imag_stds, 3.0 * torch.ones_like(imag_stds), atol=1e-5)
+
+    def test_forward_different_input_sizes(self):
+        """Test forward pass with different input sizes."""
+        norm = ComplexInstanceNorm2d(num_features=64, eps=1e-5, affine=True)
+
+        # Test different input sizes
+        input_sizes = [
+            (1, 64, 1, 1),      # Single pixel
+            (1, 64, 8, 8),      # Small image
+            (4, 64, 32, 32),    # Medium batch and image
+            (2, 64, 128, 256),  # Large image
+        ]
+
+        for batch_size, channels, height, width in input_sizes:
+            x = torch.randn(batch_size, channels, height, width)
+            output = norm.forward(x)
+
+            assert output.shape == (batch_size, channels, height, width)
+
+            # Verify normalization properties hold for all sizes
+            if height * width > 1:  # Skip single pixel case
+                real_out, imag_out = output.chunk(2, dim=1)
+                real_means = real_out.mean(dim=[2, 3])
+                imag_means = imag_out.mean(dim=[2, 3])
+
+                assert torch.allclose(real_means, torch.zeros_like(real_means), atol=1e-5)
+                assert torch.allclose(imag_means, torch.zeros_like(imag_means), atol=1e-5)
+
+    def test_chunk_operation(self):
+        """Test the chunk operation in forward method."""
+        norm = ComplexInstanceNorm2d(num_features=16, eps=1e-5, affine=True)
+
+        # Create input
+        x = torch.randn(2, 16, 8, 8)
+
+        # Forward pass
+        output = norm.forward(x)
+
+        # Verify chunking worked correctly
+        real_part, imag_part = x.chunk(2, dim=1)
+        assert real_part.shape == (2, 8, 8, 8)  # Half the channels
+        assert imag_part.shape == (2, 8, 8, 8)  # Half the channels
+
+        # Output should also be properly structured
+        real_out, imag_out = output.chunk(2, dim=1)
+        assert real_out.shape == (2, 8, 8, 8)
+        assert imag_out.shape == (2, 8, 8, 8)
+
+    def test_gradient_flow(self):
+        """Test that gradients flow properly through the network."""
+        norm = ComplexInstanceNorm2d(num_features=32, eps=1e-5, affine=True)
+
+        # Create input that requires grad
+        x = torch.randn(2, 32, 8, 8, requires_grad=True)
+
+        # Forward pass
+        output = norm.forward(x)
+
+        # Create a simple loss
+        loss = output.sum()
+
+        # Backward pass
+        loss.backward()
+
+        # Check that gradients exist
+        assert x.grad is not None
+        assert norm.weight_real.grad is not None
+        assert norm.weight_imag.grad is not None
+        assert norm.bias_real.grad is not None
+        assert norm.bias_imag.grad is not None
+
+        # Check that gradients are non-zero (indicating proper flow)
+        assert not torch.allclose(x.grad, torch.zeros_like(x.grad))
+        assert not torch.allclose(norm.weight_real.grad, torch.zeros_like(norm.weight_real.grad))
+
+    def test_device_compatibility(self):
+        """Test that the module works on different devices."""
+        norm = ComplexInstanceNorm2d(num_features=16, eps=1e-5, affine=True)
+
+        # Test on CPU
+        x_cpu = torch.randn(1, 16, 8, 8)
+        output_cpu = norm.forward(x_cpu)
+        assert output_cpu.device.type == 'cpu'
+
+        # Test on GPU if available
+        if torch.cuda.is_available():
+            norm_gpu = norm.cuda()
+            x_gpu = x_cpu.cuda()
+            output_gpu = norm_gpu.forward(x_gpu)
+            assert output_gpu.device.type == 'cuda'
+
+            # Results should be similar (allowing for minor numerical differences)
+            assert torch.allclose(output_cpu, output_gpu.cpu(), atol=1e-5)
+
+    def test_module_inheritance(self):
+        """Test that ComplexInstanceNorm2d properly inherits from nn.Module."""
+        norm = ComplexInstanceNorm2d(num_features=8, eps=1e-5, affine=True)
+
+        assert isinstance(norm, nn.Module)
+
+        # Test that it can be added to a sequential model
+        model = nn.Sequential(
+            norm,
+            nn.ReLU()
+        )
+
+        # Test parameter counting
+        params = list(norm.parameters())
+        assert len(params) == 4  # weight_real, weight_imag, bias_real, bias_imag
+
+        total_params = sum(p.numel() for p in norm.parameters())
+        expected_params = 4 * (8 // 2)  # 4 parameters × num_features//2
+        assert total_params == expected_params
+
+    def test_training_mode(self):
+        """Test behavior in training vs evaluation mode."""
+        norm = ComplexInstanceNorm2d(num_features=32, eps=1e-5, affine=True)
+
+        x = torch.randn(2, 32, 8, 8)
+
+        # Training mode
+        norm.train()
+        output_train = norm.forward(x)
+
+        # Evaluation mode
+        norm.eval()
+        output_eval = norm.forward(x)
+
+        # For instance norm, behavior should be the same in train/eval
+        # (unlike batch norm which uses running statistics in eval)
+        assert torch.allclose(output_train, output_eval, atol=1e-6)
+
+    def test_numerical_stability(self):
+        """Test numerical stability with edge cases."""
+        norm = ComplexInstanceNorm2d(num_features=8, eps=1e-5, affine=True)
+
+        # Test with very small values
+        x_small = torch.randn(1, 8, 4, 4) * 1e-10
+        output_small = norm.forward(x_small)
+        assert torch.isfinite(output_small).all()
+
+        # Test with very large values
+        x_large = torch.randn(1, 8, 4, 4) * 1e10
+        output_large = norm.forward(x_large)
+        assert torch.isfinite(output_large).all()
+
+        # Test with constant values (zero variance)
+        x_constant = torch.ones(1, 8, 4, 4) * 5.0
+        output_constant = norm.forward(x_constant)
+        assert torch.isfinite(output_constant).all()
+
+
+class TestComplexInstanceNorm2dEdgeCases:
+    """Test edge cases and error conditions."""
+
+    def test_single_pixel_input(self):
+        """Test with single pixel input."""
+        norm = ComplexInstanceNorm2d(num_features=4, eps=1e-5, affine=True)
+
+        # Single pixel input
+        x_single = torch.randn(1, 4, 1, 1)
+        output = norm.forward(x_single)
+
+        assert output.shape == (1, 4, 1, 1)
+        assert torch.isfinite(output).all()
+
+    def test_zero_input(self):
+        """Test with zero input."""
+        norm = ComplexInstanceNorm2d(num_features=8, eps=1e-5, affine=False)
+
+        x_zero = torch.zeros(2, 8, 4, 4)
+        output = norm.forward(x_zero)
+
+        # Output should be zero when input is zero (no affine transformation)
+        assert torch.allclose(output, torch.zeros_like(output))
+
+    def test_identical_values(self):
+        """Test with identical values across spatial dimensions."""
+        norm = ComplexInstanceNorm2d(num_features=4, eps=1e-5, affine=False)
+
+        # Create input where each channel has identical values across H,W
+        x = torch.randn(1, 4, 1, 1).expand(1, 4, 8, 8)
+        output = norm.forward(x)
+
+        # Should handle zero variance gracefully
+        assert torch.isfinite(output).all()
+
+    def test_different_eps_values(self):
+        """Test with different epsilon values."""
+        eps_values = [1e-8, 1e-5, 1e-3, 1e-1]
+
+        x = torch.randn(1, 8, 4, 4)
+
+        for eps in eps_values:
+            norm = ComplexInstanceNorm2d(num_features=8, eps=eps, affine=False)
+            output = norm.forward(x)
+
+            assert torch.isfinite(output).all()
+            assert output.shape == x.shape
