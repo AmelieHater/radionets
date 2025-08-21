@@ -1,2 +1,2 @@
-added ComplexConv2d and ComplexInstanceNorm2d layer
-added tests for ComplexConv2d and ComplexInstanceNorm2d layer
+added ComplexConv2d, ComplexInstanceNorm2d and ComplexPReLU layer
+added tests for ComplexConv2d, ComplexInstanceNorm2d and ComplexPReLU layer
