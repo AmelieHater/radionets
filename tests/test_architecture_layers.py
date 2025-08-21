@@ -1,4 +1,5 @@
 import torch
+import pytest
 
 from radionets.architecture.layers import LocallyConnected2d
 
@@ -44,7 +45,7 @@ class TestLocallyConnected2d:
         # Check bias shape
         expected_bias_shape = (1, 16, 8, 8)
         assert layer.bias.shape == expected_bias_shape
-        assert isinstance(layer.bias, nn.Parameter)
+        assert isinstance(layer.bias, torch.nn.Parameter)
 
     def test_forward_pass_basic(self):
         """Test basic forward pass functionality."""
