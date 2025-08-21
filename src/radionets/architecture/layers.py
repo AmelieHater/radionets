@@ -186,3 +186,140 @@ class ComplexConv2d(nn.Module):
         imag_out = self.conv_real(imag) + self.conv_imag(real)
 
         return torch.cat([real_out, imag_out], dim=1)
+
+
+class ComplexInstanceNorm2d(nn.Module):
+    """
+    2D instance normalization layer for complex-valued tensors.
+    This layer performs instance normalization on complex-valued inputs by
+    treating real and imaginary parts separately.
+
+    The normalization is applied as:
+    normalized = (x - mean) / sqrt(variance + eps)
+
+    If affine=True, learnable scale and shift parameters are applied:
+    output = normalized * weight + bias
+
+    Parameters
+    ----------
+    num_features : int
+        Number of channels in the input tensor. For complex inputs, this
+        represents the number of complex channels (input will have 2*num_features
+        channels representing real and imaginary parts).
+    eps : float, optional
+        A small value added to the denominator for numerical stability.
+        Default is 1e-5.
+    affine : bool, optional
+        If True, adds learnable affine parameters (scale and shift).
+        Default is True.
+
+    Attributes
+    ----------
+    num_features : int
+        Number of complex channels which get split into real and imaginary
+        part equally. (num_channels // 2 for real and imag)
+    eps : float
+        Epsilon value for numerical stability.
+    affine : bool
+        Whether affine transformation is enabled.
+    weight_real : torch.nn.Parameter or None
+        Learnable scale parameter for real part. Shape: (num_features // 2,).
+        Only exists if affine=True.
+    weight_imag : torch.nn.Parameter or None
+        Learnable scale parameter for imaginary part. Shape: (num_features // 2,).
+        Only exists if affine=True.
+    bias_real : torch.nn.Parameter or None
+        Learnable shift parameter for real part. Shape: (num_features // 2,).
+        Only exists if affine=True.
+    bias_imag : torch.nn.Parameter or None
+        Learnable shift parameter for imaginary part. Shape: (num_features // 2,).
+        Only exists if affine=True.
+    """
+
+    def __init__(self, num_features, eps=1e-5, affine=True):
+        """
+        Initialize the ComplexInstanceNorm2d layer.
+
+        Parameters
+        ----------
+        num_features : int
+            Number of channels in the input tensor. Num_features will be
+            equally split into channels for real and imag.
+        eps : float, optional
+            Small value added to variance for numerical stability.
+            Must be positive. Default is 1e-5.
+        affine : bool, optional
+            If True, creates learnable affine parameters (weights and biases)
+            for both real and imaginary components. Default is True.
+        """
+        super().__init__()
+
+        # Store configuration
+        self.num_features = num_features // 2  # Divide by 2 for equal real and imag
+        self.eps = eps
+        self.affine = affine
+
+        if self.affine:
+            # Separate parameters for real and imaginary parts
+            # Initialize weights to ones for identity scaling
+            self.weight_real = nn.Parameter(torch.ones(self.num_features))
+            self.weight_imag = nn.Parameter(torch.ones(self.num_features))
+
+            # Initialize biases to zeros for no initial shift
+            self.bias_real = nn.Parameter(torch.zeros(self.num_features))
+            self.bias_imag = nn.Parameter(torch.zeros(self.num_features))
+
+    def forward(self, x):
+        """
+        Forward pass of the complex instance normalization layer.
+
+        Performs instance normalization on complex-valued input by processing
+        real and imaginary components separately. Computes statistics across
+        spatial dimensions for each sample and channel independently.
+
+        Complex values have to be passed in separate channels as torch.float,
+        e.g., one channel for real and one channel for imag, leading to a shape
+        [bs, 2, h, w].
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor of shape (batch_size, num_features, height, width)
+            where the first half of channels represents real parts and the
+            second half represents imaginary parts of complex values.
+
+        Returns
+        -------
+        torch.Tensor
+            Normalized tensor of the same shape as input
+            (batch_size, num_features, height, width). The tensor maintains
+            the same dtype and device as the input.
+
+        """
+        # Split complex input into real and imaginary components
+        real, imag = x.chunk(2, dim=1)
+
+        # Instance normalization for each part separately
+        # Calc mean and variance across dimensions (H, W) for each sample and channel
+        # unbiased=False: uses N denominator instead of N-1 for variance
+        real_mean = real.mean(dim=[2, 3], keepdim=True)
+        imag_mean = imag.mean(dim=[2, 3], keepdim=True)
+
+        real_var = real.var(dim=[2, 3], keepdim=True, unbiased=False)
+        imag_var = imag.var(dim=[2, 3], keepdim=True, unbiased=False)
+
+        # Normalize
+        real_norm = (real - real_mean) / torch.sqrt(real_var + self.eps)
+        imag_norm = (imag - imag_mean) / torch.sqrt(imag_var + self.eps)
+
+        if self.affine:
+            # Apply learnable affine transformation
+            real_norm = real_norm * self.weight_real.view(
+                1, -1, 1, 1
+            ) + self.bias_real.view(1, -1, 1, 1)
+
+            imag_norm = imag_norm * self.weight_imag.view(
+                1, -1, 1, 1
+            ) + self.bias_imag.view(1, -1, 1, 1)
+
+        return torch.cat([real_norm, imag_norm], dim=1)
