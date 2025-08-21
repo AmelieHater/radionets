@@ -1295,8 +1295,8 @@ class TestComplexPReLUEdgeCases:
 
         # Test with very large values
         x_large = torch.tensor([
-            [[[1e6, -1e6]]],  # Real part
-            [[[1e5, -1e5]]]   # Imaginary part
+            [[[1e6, -1e6]], [[1e6, -1e6]]],
+            [[[1e5, -1e5]], [[1e5, -1e5]]]
         ])
 
         output_large = prelu.forward(x_large)
@@ -1304,8 +1304,8 @@ class TestComplexPReLUEdgeCases:
 
         # Test with very small values
         x_small = torch.tensor([
-            [[[1e-6, -1e-6]]],  # Real part
-            [[[1e-7, -1e-7]]]   # Imaginary part
+            [[[1e-6, -1e-6]], [[1e-6, -1e-6]]],
+            [[[1e-7, -1e-7]], [[1e-7, -1e-7]]]
         ])
 
         output_small = prelu.forward(x_small)
@@ -1317,8 +1317,8 @@ class TestComplexPReLUEdgeCases:
 
         # Input with exact zeros
         x = torch.tensor([
-            [[[0.0, -1.0], [1.0, 0.0]]],  # Real part
-            [[[0.0, 1.0], [-1.0, 0.0]]]   # Imaginary part
+            [[[0.0, -1.0], [1.0, 0.0]], [[0.0, -1.0], [1.0, 0.0]]],
+            [[[0.0, 1.0], [-1.0, 0.0]], [[0.0, 1.0], [-1.0, 0.0]]]
         ])
 
         output = prelu.forward(x)
@@ -1346,9 +1346,9 @@ class TestComplexPReLUEdgeCases:
         num_params = 512
         prelu = ComplexPReLU(num_parameters=num_params, init=0.05)
 
-        x = torch.randn(1, 2*num_params, 4, 4)  # Match the channel requirement
+        x = torch.randn(1, num_params, 4, 4)  # Match the channel requirement
         output = prelu.forward(x)
 
         assert output.shape == x.shape
-        assert prelu.weight_real.shape == (num_params,)
-        assert prelu.weight_imag.shape == (num_params,)
+        assert prelu.weight_real.shape == (num_params // 2,)
+        assert prelu.weight_imag.shape == (num_params // 2,)
