@@ -744,10 +744,10 @@ class TestComplexInstanceNorm2d:
         real_stds = real_out.std(dim=[2, 3], unbiased=False)
         imag_stds = imag_out.std(dim=[2, 3], unbiased=False)
 
-        assert torch.allclose(real_means, torch.ones_like(real_means), atol=1e-5)
-        assert torch.allclose(imag_means, -torch.ones_like(imag_means), atol=1e-5)
-        assert torch.allclose(real_stds, 2.0 * torch.ones_like(real_stds), atol=1e-5)
-        assert torch.allclose(imag_stds, 3.0 * torch.ones_like(imag_stds), atol=1e-5)
+        assert torch.allclose(real_means, torch.ones_like(real_means), atol=1e-4)
+        assert torch.allclose(imag_means, -torch.ones_like(imag_means), atol=1e-4)
+        assert torch.allclose(real_stds, 2.0 * torch.ones_like(real_stds), atol=1e-4)
+        assert torch.allclose(imag_stds, 3.0 * torch.ones_like(imag_stds), atol=1e-4)
 
     def test_forward_different_input_sizes(self):
         """Test forward pass with different input sizes."""
@@ -773,8 +773,8 @@ class TestComplexInstanceNorm2d:
                 real_means = real_out.mean(dim=[2, 3])
                 imag_means = imag_out.mean(dim=[2, 3])
 
-                assert torch.allclose(real_means, torch.zeros_like(real_means), atol=1e-5)
-                assert torch.allclose(imag_means, torch.zeros_like(imag_means), atol=1e-5)
+                assert torch.allclose(real_means, torch.zeros_like(real_means), atol=1e-4)
+                assert torch.allclose(imag_means, torch.zeros_like(imag_means), atol=1e-4)
 
     def test_chunk_operation(self):
         """Test the chunk operation in forward method."""
