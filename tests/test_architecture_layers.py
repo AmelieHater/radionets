@@ -1282,9 +1282,6 @@ class TestComplexPReLU:
                 atol=1e-6
             )
 
-        # Property 3: Function is piecewise linear
-        # This is inherently satisfied by the PReLU definition
-
 
 class TestComplexPReLUEdgeCases:
     """Test edge cases and error conditions."""
