@@ -321,3 +321,104 @@ class ComplexInstanceNorm2d(nn.Module):
             ) + self.bias_imag.view(1, -1, 1, 1)
 
         return torch.cat([real_norm, imag_norm], dim=1)
+
+
+class ComplexPReLU(nn.Module):
+    """
+    Parametric ReLU activation function for complex-valued tensors.
+
+    This layer applies Parametric ReLU activation to complex-valued inputs by
+    treating real and imaginary parts separately. PReLU allows the negative
+    slope to be learned during training, providing more flexibility than
+    standard ReLU activation.
+
+    The activation is applied as:
+    - For positive values: f(x) = x
+    - For negative values: f(x) = a * x
+
+    where 'a' is the learnable negative slope parameter.
+
+    Parameters
+    ----------
+    num_parameters : int, optional
+        Number of learnable parameters. Can be:
+        - 1: Single shared parameter for all channels (default)
+        - num_channels: Per-channel parameters for fine-grained control
+        Default is 1.
+    init : float, optional
+        Initial value for the negative slope parameter(s).
+        Should be a small positive value. Default is 0.25.
+
+    Attributes
+    ----------
+    num_parameters : int
+        Number of learnable parameters (1 for shared, num_channels for per-channel).
+    weight_real : torch.nn.Parameter
+        Learnable negative slope parameter(s) for real channel(s).
+        Shape: (num_parameters // 2,)
+    weight_imag : torch.nn.Parameter
+        Learnable negative slope parameter(s) for imaginary channel(s).
+        Shape: (num_parameters // 2,)
+    """
+
+    def __init__(self, num_parameters=1, init=0.25):
+        """
+        Initialize the ComplexPReLU activation layer.
+
+        Parameters
+        ----------
+        num_parameters : int, optional
+            Number of learnable parameters. Options:
+            - 1: Single parameter shared across all channels (default)
+            - num_channels: Individual parameter per channel
+            Must be positive integer. Default is 1.
+        init : float, optional
+            Initial value for the negative slope parameter(s).
+            Typically a small positive value (e.g., 0.01 to 0.25).
+            Must be finite and typically in range [0, 1].
+            Default is 0.25.
+        """
+        super().__init__()
+
+        # Store configuration
+        self.num_parameters = num_parameters
+
+        # Create separate learnable parameters for real and imaginary parts
+        n_params = self.num_parameters // 2 if self.num_parameters >= 2 else 1
+
+        self.weight_real = nn.Parameter(torch.full((n_params,), init))
+        self.weight_imag = nn.Parameter(torch.full((n_params,), init))
+
+    def forward(self, x):
+        """
+        Forward pass of the complex PReLU activation function.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor of shape (batch_size, num_channels, height, width)
+            where the first half of channels represents real parts and the
+            second half represents imaginary parts of complex values.
+
+        Returns
+        -------
+        torch.Tensor
+            Activated tensor of the same shape and dtype as input
+            (batch_size, num_channels, height, width).
+        """
+        # Split channels into real and imaginary components
+        real, imag = x.chunk(2, dim=1)
+
+        if self.num_parameters == 1:
+            # Shared parameter across all channels
+            real_out = torch.where(real >= 0, real, self.weight_real * real)
+            imag_out = torch.where(imag >= 0, imag, self.weight_imag * imag)
+        else:
+            # Per-channel parameters
+            weight_real = self.weight_real.view(1, -1, 1, 1)
+            weight_imag = self.weight_imag.view(1, -1, 1, 1)
+
+            real_out = torch.where(real >= 0, real, weight_real * real)
+            imag_out = torch.where(imag >= 0, imag, weight_imag * imag)
+
+        return torch.cat([real_out, imag_out], dim=1)
