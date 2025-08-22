@@ -1,0 +1,1 @@
+Removed calls to :func:`matpltolib.pyplot.tight_layout` in :mod:`radionets.core.callbacks` that would raise exceptions during training
