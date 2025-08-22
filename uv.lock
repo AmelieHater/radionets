@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.14'",
@@ -3020,7 +3020,6 @@ name = "radionets"
 source = { editable = "." }
 dependencies = [
     { name = "astropy" },
-    { name = "click" },
     { name = "comet-ml" },
     { name = "fastai" },
     { name = "h5py" },
@@ -3031,6 +3030,7 @@ dependencies = [
     { name = "pandas" },
     { name = "pytorch-msssim" },
     { name = "rich" },
+    { name = "rich-click" },
     { name = "scikit-image" },
     { name = "toml" },
     { name = "torch" },
@@ -3109,89 +3109,89 @@ tests = [
 
 [package.metadata]
 requires-dist = [
-    { name = "astropy" },
-    { name = "click" },
-    { name = "comet-ml" },
-    { name = "fastai" },
-    { name = "h5py" },
-    { name = "kornia" },
-    { name = "matplotlib", marker = "extra == 'plot'" },
-    { name = "natsort" },
-    { name = "numba" },
-    { name = "numpy" },
-    { name = "pandas" },
-    { name = "pytorch-msssim" },
-    { name = "rich" },
-    { name = "scikit-image" },
-    { name = "toml" },
-    { name = "torch" },
-    { name = "tqdm" },
+    { name = "astropy", specifier = ">=7.1.0" },
+    { name = "comet-ml", specifier = ">=3.50.0" },
+    { name = "fastai", specifier = ">=2.8.2" },
+    { name = "h5py", specifier = ">=3.14.0" },
+    { name = "kornia", specifier = ">=0.8.1" },
+    { name = "matplotlib", marker = "extra == 'plot'", specifier = ">=3.10.5" },
+    { name = "natsort", specifier = ">=8.4.0" },
+    { name = "numba", specifier = ">=0.61.2" },
+    { name = "numpy", specifier = ">=2.2.6" },
+    { name = "pandas", specifier = ">=2.3.1" },
+    { name = "pytorch-msssim", specifier = ">=1.0.0" },
+    { name = "rich", specifier = ">=14.1.0" },
+    { name = "rich-click", specifier = ">=1.8.9" },
+    { name = "scikit-image", specifier = ">=0.25.2" },
+    { name = "toml", specifier = ">=0.10.2" },
+    { name = "torch", specifier = ">=2.7.1" },
+    { name = "tqdm", specifier = ">=4.67.1" },
 ]
 provides-extras = ["plot"]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "coverage", specifier = "!=6.3.0" },
-    { name = "graphviz" },
-    { name = "h5py" },
-    { name = "ipython" },
-    { name = "jupyter" },
+    { name = "coverage", specifier = ">=7.10.2" },
+    { name = "graphviz", specifier = ">=0.21" },
+    { name = "h5py", specifier = ">=3.14.0" },
+    { name = "ipython", specifier = ">=9.4.0" },
+    { name = "jupyter", specifier = ">=1.1.1" },
     { name = "linkify-it-py", specifier = ">=2.0.3" },
     { name = "matplotlib" },
     { name = "myst-parser", specifier = ">=4.0.1" },
-    { name = "nbsphinx" },
-    { name = "notebook" },
-    { name = "numpydoc" },
-    { name = "pre-commit" },
-    { name = "pydata-sphinx-theme" },
+    { name = "nbsphinx", specifier = ">=0.9.7" },
+    { name = "notebook", specifier = ">=7.4.5" },
+    { name = "numpydoc", specifier = ">=1.9.0" },
+    { name = "pre-commit", specifier = ">=4.2.0" },
+    { name = "pydata-sphinx-theme", specifier = ">=0.16.1" },
     { name = "pytest", specifier = ">=7.0" },
-    { name = "pytest-cov" },
-    { name = "pytest-order" },
-    { name = "pytest-xdist" },
-    { name = "restructuredtext-lint" },
-    { name = "sphinx" },
+    { name = "pytest-cov", specifier = ">=6.2.1" },
+    { name = "pytest-order", specifier = ">=1.3.0" },
+    { name = "pytest-xdist", specifier = ">=3.8.0" },
+    { name = "restructuredtext-lint", specifier = ">=1.4.0" },
+    { name = "sphinx", specifier = ">=8.1.3" },
     { name = "sphinx-autobuild", specifier = ">=2024.10.3" },
-    { name = "sphinx-automodapi" },
-    { name = "sphinx-changelog" },
-    { name = "sphinx-copybutton" },
-    { name = "sphinx-design" },
+    { name = "sphinx-automodapi", specifier = ">=0.20.0" },
+    { name = "sphinx-changelog", specifier = ">=1.6.0" },
+    { name = "sphinx-copybutton", specifier = ">=0.5.2" },
+    { name = "sphinx-design", specifier = ">=0.6.1" },
     { name = "sphinx-gallery", specifier = ">=0.16.0" },
     { name = "sphinx-tippy", specifier = ">=0.4.3" },
     { name = "sphinx-togglebutton", specifier = ">=0.3.2" },
-    { name = "sphinxcontrib-bibtex" },
-    { name = "tomli" },
+    { name = "sphinxcontrib-bibtex", specifier = ">=2.6.5" },
+    { name = "tomli", specifier = ">=2.2.1" },
 ]
 docs = [
-    { name = "graphviz" },
-    { name = "ipython" },
-    { name = "jupyter" },
+    { name = "graphviz", specifier = ">=0.21" },
+    { name = "ipython", specifier = ">=9.4.0" },
+    { name = "jupyter", specifier = ">=1.1.1" },
     { name = "linkify-it-py", specifier = ">=2.0.3" },
     { name = "matplotlib" },
     { name = "myst-parser", specifier = ">=4.0.1" },
-    { name = "nbsphinx" },
-    { name = "notebook" },
-    { name = "numpydoc" },
-    { name = "pydata-sphinx-theme" },
-    { name = "sphinx" },
+    { name = "nbsphinx", specifier = ">=0.9.7" },
+    { name = "notebook", specifier = ">=7.4.5" },
+    { name = "numpydoc", specifier = ">=1.9.0" },
+    { name = "pydata-sphinx-theme", specifier = ">=0.16.1" },
+    { name = "sphinx", specifier = ">=8.1.3" },
     { name = "sphinx-autobuild", specifier = ">=2024.10.3" },
-    { name = "sphinx-automodapi" },
-    { name = "sphinx-changelog" },
-    { name = "sphinx-copybutton" },
-    { name = "sphinx-design" },
+    { name = "sphinx-automodapi", specifier = ">=0.20.0" },
+    { name = "sphinx-changelog", specifier = ">=1.6.0" },
+    { name = "sphinx-copybutton", specifier = ">=0.5.2" },
+    { name = "sphinx-design", specifier = ">=0.6.1" },
     { name = "sphinx-gallery", specifier = ">=0.16.0" },
     { name = "sphinx-tippy", specifier = ">=0.4.3" },
     { name = "sphinx-togglebutton", specifier = ">=0.3.2" },
-    { name = "sphinxcontrib-bibtex" },
+    { name = "sphinxcontrib-bibtex", specifier = ">=2.6.5" },
 ]
 tests = [
-    { name = "coverage", specifier = "!=6.3.0" },
-    { name = "h5py" },
+    { name = "coverage", specifier = ">=7.10.2" },
+    { name = "h5py", specifier = ">=3.14.0" },
     { name = "pytest", specifier = ">=7.0" },
-    { name = "pytest-cov" },
-    { name = "pytest-order" },
-    { name = "pytest-xdist" },
-    { name = "restructuredtext-lint" },
-    { name = "tomli" },
+    { name = "pytest-cov", specifier = ">=6.2.1" },
+    { name = "pytest-order", specifier = ">=1.3.0" },
+    { name = "pytest-xdist", specifier = ">=3.8.0" },
+    { name = "restructuredtext-lint", specifier = ">=1.4.0" },
+    { name = "tomli", specifier = ">=2.2.1" },
 ]
 
 [[package]]
@@ -3288,6 +3288,20 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/fe/75/af448d8e52bf1d8fa6a9d089ca6c07ff4453d86c65c145d0a300bb073b9b/rich-14.1.0.tar.gz", hash = "sha256:e497a48b844b0320d45007cdebfeaeed8db2a4f4bcf49f15e455cfc4af11eaa8", size = 224441, upload-time = "2025-07-25T07:32:58.125Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e3/30/3c4d035596d3cf444529e0b2953ad0466f6049528a879d27534700580395/rich-14.1.0-py3-none-any.whl", hash = "sha256:536f5f1785986d6dbdea3c75205c473f970777b4a0d6c6dd1b696aa05a3fa04f", size = 243368, upload-time = "2025-07-25T07:32:56.73Z" },
+]
+
+[[package]]
+name = "rich-click"
+version = "1.8.9"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "rich" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b7/a8/dcc0a8ec9e91d76ecad9413a84b6d3a3310c6111cfe012d75ed385c78d96/rich_click-1.8.9.tar.gz", hash = "sha256:fd98c0ab9ddc1cf9c0b7463f68daf28b4d0033a74214ceb02f761b3ff2af3136", size = 39378, upload-time = "2025-05-19T21:33:05.569Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b6/c2/9fce4c8a9587c4e90500114d742fe8ef0fd92d7bad29d136bb9941add271/rich_click-1.8.9-py3-none-any.whl", hash = "sha256:c3fa81ed8a671a10de65a9e20abf642cfdac6fdb882db1ef465ee33919fbcfe2", size = 36082, upload-time = "2025-05-19T21:33:04.195Z" },
 ]
 
 [[package]]
