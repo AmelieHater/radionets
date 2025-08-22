@@ -115,7 +115,6 @@ class SRResNetComplex(nn.Module):
                 kernel_size=9,
                 stride=1,
                 padding=4,
-                groups=2,
             ),
         )
 
