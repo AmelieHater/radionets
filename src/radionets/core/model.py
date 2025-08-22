@@ -12,7 +12,7 @@ __all__ = [
     "symmetry",
 ]
 
-LOGGER = setup_logger()
+LOGGER = setup_logger(namespace=__name__)
 
 
 def _init_cnn(m, f):
