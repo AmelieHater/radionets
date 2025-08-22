@@ -3,16 +3,18 @@ from math import pi
 import torch
 from torch import nn
 
-from radionets.dl_framework.model import GeneralRelu, SRBlock
+from radionets.dl_framework.model import (  # ComplexInstanceNorm2d,; ComplexPReLU,
+    ComplexConv2d,
+    GeneralRelu,
+    SRBlock,
+)
 
 
 class SRResNet(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.preBlock = nn.Sequential(
-            nn.Conv2d(2, 64, 9, stride=1, padding=4, groups=2), nn.PReLU()
-        )
+        self.preBlock = nn.Sequential(ComplexConv2d(2, 64, 3, 1, bias=True), nn.PReLU())
 
         # ResBlock 8
         self.blocks = nn.Sequential(
@@ -27,28 +29,29 @@ class SRResNet(nn.Module):
         )
 
         self.postBlock = nn.Sequential(
-            nn.Conv2d(64, 64, 3, stride=1, padding=1, bias=False), nn.BatchNorm2d(64)
+            ComplexConv2d(64, 64, 3, 1, bias=False), nn.BatchNorm2d(64)
         )
 
         self.final = nn.Sequential(
-            nn.Conv2d(64, 2, 9, stride=1, padding=4, groups=2),
+            ComplexConv2d(64, 2, 3, stride=1, bias=True),
         )
-
-        self.hardtanh = nn.Hardtanh(-pi, pi)
-        self.relu = nn.ReLU()
+        self.map = nn.Hardtanh(
+            min_val=-500,
+            max_val=500,
+        )
 
     def forward(self, x):
         s = x.shape[-1]
+        x_start = x.clone()
 
         x = self.preBlock(x)
 
         x = x + self.postBlock(self.blocks(x))
 
-        x = self.final(x)
+        x = self.map(self.final(x) + x_start)
 
-        x0 = x[:, 0].reshape(-1, 1, s, s)
-        x0 = self.relu(x0)
-        x1 = self.hardtanh(x[:, 1]).reshape(-1, 1, s, s)
+        x0 = x[:, 0].reshape(-1, 1, s // 2 + 5, s)
+        x1 = x[:, 1].reshape(-1, 1, s // 2 + 5, s)
 
         return torch.cat([x0, x1], dim=1)
 
@@ -58,11 +61,32 @@ class SRResNet_16(nn.Module):
         super().__init__()
 
         self.preBlock = nn.Sequential(
-            nn.Conv2d(2, 64, 9, stride=1, padding=4, groups=2, bias=True), nn.PReLU()
+            # ComplexConv2d(2, 64, 3, 1, bias=True), ComplexPReLU()
+            nn.Conv2d(2, 128, 3, 1, bias=True, padding=1, groups=2),
+            nn.InstanceNorm2d(128),
+            nn.PReLU(),
         )
 
         # ResBlock 16
-        self.blocks = nn.Sequential(
+        self.blocks_amp = nn.Sequential(
+            SRBlock(64, 64),
+            SRBlock(64, 64),
+            SRBlock(64, 64),
+            SRBlock(64, 64),
+            SRBlock(64, 64),
+            SRBlock(64, 64),
+            SRBlock(64, 64),
+            SRBlock(64, 64),
+            SRBlock(64, 64),
+            SRBlock(64, 64),
+            SRBlock(64, 64),
+            SRBlock(64, 64),
+            SRBlock(64, 64),
+            SRBlock(64, 64),
+            SRBlock(64, 64),
+            SRBlock(64, 64),
+        )
+        self.blocks_phase = nn.Sequential(
             SRBlock(64, 64),
             SRBlock(64, 64),
             SRBlock(64, 64),
@@ -82,29 +106,43 @@ class SRResNet_16(nn.Module):
         )
 
         self.postBlock = nn.Sequential(
-            nn.Conv2d(64, 64, 3, stride=1, padding=1, bias=True),
-            nn.InstanceNorm2d(64),
+            # ComplexConv2d(64, 64, 3, 1, bias=False),
+            # ComplexInstanceNorm2d(64),
+            nn.Conv2d(128, 128, 3, 1, bias=False, padding=1, groups=2),
+            nn.InstanceNorm2d(128),
         )
 
-        self.final = nn.Sequential(nn.Conv2d(64, 2, 3, stride=1, padding=1, groups=2))
-        self.map = nn.Hardtanh(
-            min_val=-1,
-            max_val=1,
+        self.final = nn.Sequential(
+            # ComplexConv2d(64, 2, 3, stride=1, bias=True),
+            nn.Conv2d(128, 2, 3, stride=1, bias=True, padding=1, groups=2),
+        )
+        self.map_amp = nn.LeakyReLU(0.1)
+
+        # nn.Hardtanh(
+        #     min_val=0,
+        #     max_val=2,
+        # )
+        self.map_phase = nn.Hardtanh(
+            min_val=-pi,
+            max_val=pi,
         )
 
     def forward(self, x):
-        s = x.shape[-1]
+        # s = x.shape[-1]
+        # mask = x == 0
 
-        x_start = x.clone()
+        # x_start = x.clone()
 
         x = self.preBlock(x)
 
-        x = x + self.postBlock(self.blocks(x))
+        x = x + self.postBlock(
+            torch.cat([self.blocks_amp(x[:, :64]), self.blocks_phase(x[:, 64:])], dim=1)
+        )
 
-        x = self.map(self.final(x) + x_start)
+        x = self.final(x)  # + x_start
 
-        x0 = x[:, 0].reshape(-1, 1, s // 2 + 5, s)
-        x1 = x[:, 1].reshape(-1, 1, s // 2 + 5, s)
+        x0 = self.map_amp(x[:, 0])[:, None]
+        x1 = self.map_phase(x[:, 1])[:, None]
 
         return torch.cat([x0, x1], dim=1)
 
