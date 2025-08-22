@@ -3,6 +3,8 @@ import torch
 from torch import nn
 
 __all__ = [
+    "MaskedPatchLoss",
+    "MaskedPatchLossWeighted",
     "beta_nll_loss",
     "create_circular_mask",
     "jet_seg",
@@ -11,6 +13,26 @@ __all__ = [
     "splitted_L1",
     "splitted_L1_masked",
 ]
+
+
+class MaskedPatchLoss(nn.Module):
+    def forward(self, x, y):
+        pred, mask = x["pred"], x["mask"]
+        target = y
+
+        loss = mse(pred[mask.bool()], target[mask.bool()])
+        return loss
+
+
+class MaskedPatchLossWeighted(MaskedPatchLoss):
+    def forward(self, x, y):
+        pred, mask = x["pred"], x["mask"]
+        target = y
+
+        loss_reco = super().forward(x, y)
+        loss_input = mse(pred[~mask.bool()], target[~mask.bool()])
+
+        return 0.8 * loss_reco + 0.2 * loss_input
 
 
 def l1(x, y):
