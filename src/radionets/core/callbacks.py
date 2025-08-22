@@ -504,17 +504,10 @@ class PredictionImageGradient(Callback):
         img_size = img_test[0].shape[-1]
         model_used = load_pretrained_model(self.arch_name, self.model, img_size)
 
-        # # get image but not gradients
-        # output = get_ifft(eval_model(img_test[0], model_used), self.amp_phase)
-
         output = eval_model(img_test[0], model_used)
         gradient = K.filters.spatial_gradient(output)
 
         grads_x = get_ifft(gradient[:, :, 0], self.amp_phase)
         grads_y = get_ifft(gradient[:, :, 1], self.amp_phase)
-
-        # # fourier space
-        # grads_x = gradient[:, :, 0]
-        # grads_y = gradient[:, :, 1]
 
         return grads_x, grads_y
