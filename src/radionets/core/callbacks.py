@@ -39,9 +39,30 @@ LOGGER = setup_logger()
 
 
 class CometCallback(Callback):
-    def __init__(self, name, test_data, plot_n_epochs, amp_phase, scale):
+    """Callback for logging training metrics and visualizations
+    to Comet ML.
+
+    This callback logs training and validation losses, and
+    creates plots for predictions and Fourier-transformed
+    data for monitoring during training.
+
+    Parameters
+    ----------
+    name : str
+        Project name for the Comet ML experiment.
+    validation_data : str or Path
+        Path to the validation dataset.
+    plot_n_epochs : int
+        Frequency of plotting (every n epochs).
+    amp_phase : bool
+        Whether to use amplitude-phase representation.
+    scale : str
+        Scaling method for data.
+    """
+
+    def __init__(self, name, validation_data, plot_n_epochs, amp_phase, scale):
         self.experiment = comet_ml.Experiment(project_name=name)
-        self.data_path = test_data
+        self.data_path = validation_data
         self.plot_epoch = plot_n_epochs
         self.test_ds = load_data(self.data_path, mode="test", fourier=True)
         self.amp_phase = amp_phase
@@ -192,13 +213,11 @@ class CometCallback(Callback):
 
 
 class AvgLossCallback(Callback):
-    """Save the same average Loss for training and validation as printed to
-    the terminal.
+    """Callback for tracking and plotting average training
+    and validation losses.
 
-    Parameters
-    ----------
-    Callback : object
-        Callback class
+    Saves the average loss for training and validation
+    that is printed to the terminal.
     """
 
     def __init__(self):
@@ -242,10 +261,20 @@ class AvgLossCallback(Callback):
         plt.plot(self.lrs)
         plt.xlabel(r"Number of Batches")
         plt.ylabel(r"Learning rate")
-        plt.tight_layout()
 
 
 class CudaCallback(Callback):
+    """Callback to move model to CUDA device before training.
+
+    Simple callback that ensures the model is moved to the
+    GPU before the training loop.
+
+    Attributes
+    ----------
+    _order : int
+        Callback execution order (3).
+    """
+
     _order = 3
 
     def before_fit(self):
@@ -253,6 +282,14 @@ class CudaCallback(Callback):
 
 
 class DataAug(Callback):
+    """Callback that applies data augmentation using
+    random rotations.
+
+    Applies random multiples of 90-degree rotations to both
+    input and target tensors before each batch to augment
+    the training data.
+    """
+
     _order = 3
 
     def before_batch(self):
@@ -274,6 +311,15 @@ class DataAug(Callback):
 
 
 class Normalize(Callback):
+    """Normalization callback for input and target data.
+
+    Parameters
+    ----------
+    conf : dict
+        Dictionary containing the normalization type stored
+        under the ``'normalize'`` key.
+    """
+
     _order = 4
 
     def __init__(self, conf):
@@ -321,6 +367,15 @@ class Normalize(Callback):
 
 
 class SaveTempCallback(Callback):
+    """Callback for saving temporary model checkpoints
+    during training.
+
+    Parameters
+    ----------
+    model_path : str or Path
+        Path where temporary models will be saved.
+    """
+
     _order = 95
 
     def __init__(self, model_path):
@@ -337,6 +392,19 @@ class SaveTempCallback(Callback):
 
 
 class SwitchLoss(Callback):
+    """Callback for switching loss functions during training.
+
+    Changes the loss function to a different one after a specified
+    number of epochs.
+
+    Parameters
+    ----------
+    second_loss : callable
+        The loss function to switch to.
+    when_switch : int
+        Epoch number after which to switch loss functions.
+    """
+
     _order = 5
 
     def __init__(self, second_loss, when_switch):
@@ -349,9 +417,23 @@ class SwitchLoss(Callback):
 
 
 class GradientCallback(Callback):
-    def __init__(self, num_epochs, test_data, arch_name, amp_phase):
+    """Callback for gradient and prediction tracking.
+
+    Parameters
+    ----------
+    num_epochs : int
+        Number of training epochs.
+    validation_data : str or Path
+        Path to the validation dataset.
+    arch_name : str
+        Name of the architecture used for the model.
+    amp_phase : bool
+        Whether to use amplitude-phase representation.
+    """
+
+    def __init__(self, num_epochs, validation_data, arch_name, amp_phase):
         self.num_epochs = num_epochs
-        self.data_path = test_data
+        self.data_path = validation_data
         self.test_ds = load_data(
             self.data_path, mode="test", fourier=True, source_list=False
         )
@@ -395,8 +477,23 @@ class GradientCallback(Callback):
 
 
 class PredictionImageGradient(Callback):
-    def __init__(self, test_data, model, amp_phase, arch_name):
-        self.data_path = test_data
+    """Callback for computing spatial gradients
+    of model predictions.
+
+    Parameters
+    ----------
+    validation_data : str or Path
+        Path to validation dataset.
+    model : str or Path
+        Path to pretrained model.
+    amp_phase : bool
+        Whether to use amplitude-phase representation.
+    arch_name : str
+        Name of the architecture used for the model.
+    """
+
+    def __init__(self, validation_data, model, amp_phase, arch_name):
+        self.data_path = validation_data
         self.test_ds = load_data(
             self.data_path, mode="test", fourier=True, source_list=False
         )
