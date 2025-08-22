@@ -14,8 +14,11 @@ __all__ = [
 
 
 def l1(x, y):
+    pred = x["pred"]
+
     l1 = nn.L1Loss()
-    loss = l1(x, y)
+    loss = l1(pred, y)
+
     return loss
 
 
@@ -35,8 +38,9 @@ def create_circular_mask(h, w, center=None, radius=None, bs=64):
 
 
 def splitted_L1_masked(x, y):
-    inp_amp = x[:, 0, :]
-    inp_phase = x[:, 1, :]
+    pred = x["pred"]
+    inp_amp = pred[:, 0, :]
+    inp_phase = pred[:, 1, :]
 
     tar_amp = y[:, 0, :]
     tar_phase = y[:, 1, :]
@@ -57,8 +61,9 @@ def splitted_L1_masked(x, y):
 
 
 def splitted_L1(x, y):
-    inp_amp = x[:, 0, :]
-    inp_phase = x[:, 1, :]
+    pred = x["pred"]
+    inp_amp = pred[:, 0, :]
+    inp_phase = pred[:, 1, :]
 
     tar_amp = y[:, 0, :]
     tar_phase = y[:, 1, :]
@@ -89,12 +94,13 @@ def beta_nll_loss(x: torch.tensor, y: torch.tensor, beta: float = 0.5):
     -------
     float : Loss per batch element of shape B
     """
-    pred_amp = x[:, 0, :]
-    pred_phase = x[:, 2, :]
+    pred = x["pred"]
+    pred_amp = pred[:, 0, :]
+    pred_phase = pred[:, 2, :]
     mean = torch.stack([pred_amp, pred_phase], axis=1)
 
-    unc_amp = x[:, 1, :]
-    unc_phase = x[:, 3, :]
+    unc_amp = pred[:, 1, :]
+    unc_phase = pred[:, 3, :]
     variance = torch.stack([unc_amp, unc_phase], axis=1)
 
     tar_amp = y[:, 0, :]
@@ -110,16 +116,19 @@ def beta_nll_loss(x: torch.tensor, y: torch.tensor, beta: float = 0.5):
 
 
 def mse(x, y):
+    pred = x["pred"]
     mse = nn.MSELoss()
-    loss = mse(x, y)
+    loss = mse(pred, y)
 
     return loss
 
 
 def jet_seg(x, y):
+    pred = x["pred"]
+
     # weight components farer outside more
     loss_l1_weighted = 0
-    for i in range(x.shape[1]):
-        loss_l1_weighted += l1(x[:, i], y[:, i]) * (i + 1)
+    for i in range(pred.shape[1]):
+        loss_l1_weighted += l1(pred[:, i], y[:, i]) * (i + 1)
 
     return loss_l1_weighted
