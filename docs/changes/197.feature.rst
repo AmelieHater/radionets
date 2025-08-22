@@ -1,0 +1,1 @@
+Added amplitude-phase variants for SRResNet18 and 34
