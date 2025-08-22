@@ -4,7 +4,7 @@ from astropy.modeling import fitting, models
 from radionets.core.logging import setup_logger
 from radionets.plotting.visualization import plot_fitgaussian
 
-LOGGER = setup_logger()
+LOGGER = setup_logger(namespace=__name__)
 
 
 def fitgaussian_crop(data, amp_scale=0.97, crop_size=0.1):

@@ -326,9 +326,9 @@ def eval_model(img, model):
         model.cuda()
     with torch.no_grad():
         if torch.cuda.is_available():
-            pred = model(img.float().cuda())
+            pred = model(img.float().cuda())["pred"]
         else:
-            pred = model(img.float())
+            pred = model(img.float())["pred"]
     return pred.cpu()
 
 

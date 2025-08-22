@@ -1,0 +1,1 @@
+Fix plot sizes in classes of :mod:`radionets.core.callbacks`
