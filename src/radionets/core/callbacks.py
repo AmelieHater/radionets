@@ -114,7 +114,7 @@ class CometCallback(Callback):
         pred = images["pred"]
         img_true = images["truth"]
 
-        fig, ax = plt.subplots(2, 2, figsize=(16, 10), layout="constrained")
+        fig, ax = plt.subplots(2, 2, figsize=(11, 8.5), layout="constrained")
         ax = ax.ravel()
 
         lim_phase = check_vmin_vmax(img_true[0, 1])
@@ -134,7 +134,6 @@ class CometCallback(Callback):
         )
         make_axes_nice(fig, ax[3], im4, "Org. Imaginary")
 
-        fig.tight_layout(pad=0.1)
         self.experiment.log_figure(
             figure=fig, figure_name=f"{self.epoch + 1}_pred_epoch"
         )
@@ -180,7 +179,7 @@ class CometCallback(Callback):
             img_true, amp_phase=self.amp_phase, scale=self.scale
         )
 
-        fig, ax = plt.subplots(1, 3, figsize=(16, 10), layout="constrained")
+        fig, ax = plt.subplots(1, 3, figsize=(16, 4.5), layout="constrained")
 
         im1 = ax[0].imshow(ifft_pred, vmax=ifft_truth.max(), cmap="inferno")
         im2 = ax[1].imshow(ifft_truth, cmap="inferno")
@@ -200,7 +199,6 @@ class CometCallback(Callback):
         ax[1].set_xlabel("Pixels")
         ax[2].set_xlabel("Pixels")
 
-        fig.tight_layout(pad=0.1)
         self.experiment.log_figure(
             figure=fig, figure_name=f"{self.epoch + 1}_fft_epoch"
         )
@@ -250,7 +248,6 @@ class AvgLossCallback(Callback):
         plt.xlabel(r"Number of Epochs")
         plt.ylabel(r"Loss")
         plt.legend()
-        plt.tight_layout()
 
         train = np.array(self.loss_train)
         valid = np.array(self.loss_valid)
