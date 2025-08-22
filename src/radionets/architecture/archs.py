@@ -131,18 +131,6 @@ class SRResNet34_unc(SRResNet):
 
         self._create_blocks(16)
 
-        self.postBlock = nn.Sequential(
-            nn.Conv2d(
-                in_channels=self.channels,
-                out_channels=self.channels,
-                kernel_size=3,
-                stride=1,
-                padding=1,
-                bias=False,
-            ),
-            nn.InstanceNorm2d(self.channels),
-        )
-
         self.elu = GeneralReLU(sub=-1e-10)
 
     def forward(self, x):
