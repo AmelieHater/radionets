@@ -1,4 +1,4 @@
-Predictions are now returned inside dictionaries under the ``"pred"`` key 
+Predictions are now returned inside dictionaries under the ``"pred"`` key
 
   - This allows future architectures to return other values alongside the predictions
     that may be used by loss functions
