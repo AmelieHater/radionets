@@ -15,6 +15,7 @@ __all__ = [
     "SRResNet",
     "SRResNetComplex",
     "SRResNet18",
+    "SRResNet18Complex",
     "SRResNet18AmpPhase",
     "SRResNet34",
     "SRResNet34AmpPhase",
@@ -134,6 +135,14 @@ class SRResNetComplex(nn.Module):
 
 
 class SRResNet18(SRResNet):
+    def __init__(self):
+        super().__init__()
+
+        # Create 8 ResBlocks to build a SRResNet18
+        self._create_blocks(8)
+
+
+class SRResNet18Complex(SRResNetComplex):
     def __init__(self):
         super().__init__()
 
