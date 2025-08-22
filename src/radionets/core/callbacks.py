@@ -118,8 +118,11 @@ class CometCallback(Callback):
         fig, ax = plt.subplots(2, 2, figsize=(11, 8.5), layout="constrained")
         ax = ax.ravel()
 
+        lim_amp = check_vmin_vmax(img_true[0, 0])
         lim_phase = check_vmin_vmax(img_true[0, 1])
-        im1 = ax[0].imshow(pred[0, 0], cmap="radionets.PuOr")
+        im1 = ax[0].imshow(
+            pred[0, 0], cmap="radionets.PuOr", vmin=-lim_amp, vmax=lim_amp
+        )
         make_axes_nice(fig, ax[0], im1, "Real")
 
         im2 = ax[1].imshow(
@@ -127,7 +130,9 @@ class CometCallback(Callback):
         )
         make_axes_nice(fig, ax[1], im2, "Imaginary")
 
-        im3 = ax[2].imshow(img_true[0, 0], cmap="radionets.PuOr")
+        im3 = ax[2].imshow(
+            img_true[0, 0], cmap="radionets.PuOr", vmin=-lim_amp, vmax=lim_amp
+        )
         make_axes_nice(fig, ax[2], im3, "Org. Real")
 
         im4 = ax[3].imshow(
