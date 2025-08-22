@@ -188,9 +188,9 @@ class CometCallback(Callback):
         fig, ax = plt.subplots(1, 3, figsize=(16, 4.5), layout="constrained")
 
         im1 = ax[0].imshow(
-            ifft_pred, norm=PowerNorm(0.5, vmax=ifft_truth.max()), cmap="inferno"
+            ifft_pred, norm=PowerNorm(0.25, vmax=ifft_truth.max()), cmap="inferno"
         )
-        im2 = ax[1].imshow(ifft_truth, norm=PowerNorm(0.5), cmap="inferno")
+        im2 = ax[1].imshow(ifft_truth, norm=PowerNorm(0.25), cmap="inferno")
         a = check_vmin_vmax(ifft_pred - ifft_truth)
         im3 = ax[2].imshow(
             ifft_pred - ifft_truth, cmap="radionets.PuOr", vmin=-a, vmax=a
