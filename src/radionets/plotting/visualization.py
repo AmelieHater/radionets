@@ -94,8 +94,6 @@ def plot_inp_tar(h5_dataset, fourier=False, amp_phase=False):
             im4 = ax4.imshow(tar2, cmap="RdBu", vmin=-pi, vmax=pi)
             make_axes_nice(fig, ax4, im4, "Target: phase")
 
-    fig.tight_layout()
-
 
 def visualize_with_fourier(
     i: int,
@@ -229,8 +227,6 @@ def visualize_with_fourier(
     if return_fig:
         return fig, ax
 
-    plt.tight_layout(pad=1.5)
-
     outpath = str(out_path) + f"/prediction_{i}.{plot_format}"
     fig.savefig(outpath, bbox_inches="tight", pad_inches=0.01)
 
@@ -322,7 +318,6 @@ def visualize_with_fourier_diff(
     ax4.set_xlabel(r"Pixels")
     ax5.set_xlabel(r"Pixels")
     ax6.set_xlabel(r"Pixels")
-    plt.tight_layout(pad=1)
 
     outpath = str(out_path) + f"/prediction_{i}.{plot_format}"
     fig.savefig(outpath, bbox_inches="tight", pad_inches=0.05)
@@ -383,7 +378,6 @@ def visualize_source_reconstruction(
 
     outpath = str(out_path) + f"/fft_pred_{i}.{plot_format}"
 
-    fig.tight_layout(pad=1)
     plt.savefig(outpath, bbox_inches="tight", pad_inches=0.05)
     plt.close("all")
     return np.abs(ifft_pred), np.abs(ifft_truth)
@@ -420,7 +414,6 @@ def visualize_uncertainty(
     ax3.set_xlabel(r"pixels")
     ax4.set_xlabel(r"pixels")
 
-    fig.tight_layout(pad=1)
     outpath = str(out_path) + f"/unc_amp{i}.{plot_format}"
     fig.savefig(outpath, bbox_inches="tight", pad_inches=0.05)
 
@@ -448,7 +441,6 @@ def visualize_uncertainty(
     ax3.set_xlabel(r"pixels")
     ax4.set_xlabel(r"pixels")
 
-    fig.tight_layout(pad=1)
     outpath = str(out_path) + f"/unc_phase{i}.{plot_format}"
     fig.savefig(outpath, bbox_inches="tight", pad_inches=0.05)
     plt.close("all")
@@ -528,7 +520,6 @@ def visualize_sampled_unc(i, mean, std, ifft_truth, out_path, plot_format):
     ax3.set_xlabel(r"pixels")
     ax3.set_ylabel(r"pixels")
     ax4.set_xlabel(r"pixels")
-    fig.tight_layout(pad=1.5)
     outpath = str(out_path) + f"/unc_samp{i}.{plot_format}"
     fig.savefig(outpath, bbox_inches="tight", pad_inches=0.05)
     plt.close("all")
@@ -590,7 +581,6 @@ def plot_contour(
     ax[0].set_xlabel(r"Pixels")
     ax[1].set_xlabel(r"Pixels")
 
-    plt.tight_layout(pad=0.75)
     plt.savefig(outpath, bbox_inches="tight", pad_inches=0.05)
     plt.close("all")
 
@@ -707,8 +697,6 @@ def plot_jet_results(inp, pred, truth, path, save=False, plot_format="pdf"):
         cbar = fig.colorbar(im2, cax=cax, orientation="vertical")
         cbar.set_label(r"Specific Intensity / a.u.")
 
-        plt.tight_layout()
-
         if save:
             Path(path).mkdir(parents=True, exist_ok=True)
             outpath = str(path) + f"/prediction_{i}.{plot_format}"
@@ -787,8 +775,6 @@ def plot_jet_components_results(inp, pred, truth, path, save=False, plot_format=
             cbar = fig.colorbar(im4, cax=cax, orientation="vertical")
             cbar.set_label(r"Specific Intensity / a.u.")
 
-            plt.tight_layout(w_pad=2)
-
             if save:
                 Path(path).mkdir(parents=True, exist_ok=True)
                 outpath = str(path) + f"/prediction_{i}_comp_{j}.{plot_format}"
@@ -847,8 +833,6 @@ def plot_fitgaussian(
             transform=axs[i].transAxes,
         )
 
-    plt.tight_layout()
-
     if save:
         Path(path).mkdir(parents=True, exist_ok=True)
         outpath = str(path) + f"/eval_iterativ_gaussian_{iteration}.{plot_format}"
@@ -881,8 +865,6 @@ def plot_data(x, path, rows=1, cols=1, save=False, plot_format="pdf"):
             cax = divider.append_axes("right", size="5%", pad=0.05)
             cbar = fig.colorbar(img, cax=cax, orientation="vertical")
             cbar.set_label(r"Specific Intensity / a.u.")
-
-    plt.tight_layout()
 
     if save:
         Path(path).mkdir(parents=True, exist_ok=True)

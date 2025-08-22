@@ -1,0 +1,1 @@
+Removed calls to :func:`matplotlib.pyplot.tight_layout` in :mod:`radionets.plotting`
