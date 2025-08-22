@@ -42,7 +42,7 @@ class SRResNet(nn.Module):
                 padding=1,
                 bias=False,
             ),
-            nn.BatchNorm2d(self.channels),
+            nn.InstanceNorm2d(self.channels),
         )
 
         self.final = nn.Sequential(
@@ -56,9 +56,6 @@ class SRResNet(nn.Module):
             ),
         )
 
-        self.hardtanh = nn.Hardtanh(-pi, pi)
-        self.relu = nn.ReLU()
-
     def _create_blocks(self, n_blocks):
         blocks = []
         for _ in range(n_blocks):
@@ -66,17 +63,12 @@ class SRResNet(nn.Module):
 
         self.blocks = nn.Sequential(*blocks)
 
-    def forward(self, x):
-        x = self.preBlock(x)
-
+    def forward(self, input):
+        x = self.preBlock(input)
         x = x + self.postBlock(self.blocks(x))
-
         x = self.final(x)
 
-        x0 = self.relu(x[:, 0].unsqueeze(1))
-        x1 = self.hardtanh(x[:, 1].unsqueeze(1))
-
-        return {"pred": torch.cat([x0, x1], dim=1)}
+        return {"pred": x}
 
 
 class SRResNet18(SRResNet):
@@ -87,6 +79,25 @@ class SRResNet18(SRResNet):
         self._create_blocks(8)
 
 
+class SRResNet18AmpPhase(SRResNet):
+    def __init__(self):
+        super().__init__()
+
+        # Create 8 ResBlocks to build a SRResNet18
+        self._create_blocks(8)
+
+        self.hardtanh = nn.Hardtanh(-pi, pi)
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        x = super().forward(x)
+
+        x_amp = self.relu(x[:, 0].unsqueeze(1))
+        x_phase = self.hardtanh(x[:, 1].unsqueeze(1))
+
+        return {"pred": torch.cat([x_amp, x_phase], dim=1)}
+
+
 class SRResNet34(SRResNet):
     def __init__(self):
         super().__init__()
@@ -94,17 +105,24 @@ class SRResNet34(SRResNet):
         # Create 16 ResBlocks to build a SRResNet34
         self._create_blocks(16)
 
-        self.postBlock = nn.Sequential(
-            nn.Conv2d(
-                in_channels=self.channels,
-                out_channels=self.channels,
-                kernel_size=3,
-                stride=1,
-                padding=1,
-                bias=False,
-            ),
-            nn.InstanceNorm2d(self.channels),
-        )
+
+class SRResNet34AmpPhase(SRResNet):
+    def __init__(self):
+        super().__init__()
+
+        # Create 16 ResBlocks to build a SRResNet34
+        self._create_blocks(16)
+
+        self.hardtanh = nn.Hardtanh(-pi, pi)
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        x = super().forward(x)
+
+        x_amp = self.relu(x[:, 0].unsqueeze(1))
+        x_phase = self.hardtanh(x[:, 1].unsqueeze(1))
+
+        return {"pred": torch.cat([x_amp, x_phase], dim=1)}
 
 
 class SRResNet34_unc(SRResNet):
