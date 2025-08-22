@@ -288,7 +288,7 @@ class ComplexSRBlock(NNBlock):
                 bias=False,
             ),
             ComplexInstanceNorm2d(num_features=self.out_channels),
-            ComplexPReLU(num_features=2),
+            ComplexPReLU(num_parameters=2),
             ComplexConv2d(
                 in_channels=self.in_channels,
                 out_channels=self.out_channels,
