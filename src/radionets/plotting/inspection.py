@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 from radionets.core.logging import setup_logger
 
-LOGGER = setup_logger()
+LOGGER = setup_logger(namespace=__name__)
 
 
 def plot_loss(learn, model_path: str | Path, output_format: str = "png") -> None:

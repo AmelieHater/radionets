@@ -45,7 +45,7 @@ from radionets.plotting.visualization import (
     visualize_with_fourier_diff,
 )
 
-LOGGER = setup_logger(tracebacks_suppress=[click])
+LOGGER = setup_logger(namespace=__name__, tracebacks_suppress=[click])
 
 
 def create_predictions(conf):

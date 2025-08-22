@@ -27,7 +27,7 @@ from radionets.evaluation.train_inspection import (
 )
 from radionets.evaluation.utils import check_outpath, check_samp_file, read_config
 
-LOGGER = setup_logger(tracebacks_suppress=[click])
+LOGGER = setup_logger(namespace=__name__, tracebacks_suppress=[click])
 
 
 @click.command()

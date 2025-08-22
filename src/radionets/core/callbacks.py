@@ -35,7 +35,7 @@ __all__ = [
     "CudaCallback",
 ]
 
-LOGGER = setup_logger()
+LOGGER = setup_logger(namespace=__name__)
 
 
 class CometCallback(Callback):
