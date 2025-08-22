@@ -12,6 +12,7 @@ __all__ = [
     "SRResNet34",
     "SRResNet34_unc",
     "SRResNet34_unc_no_grad",
+    "SRResNet34Mask",
 ]
 
 
@@ -105,6 +106,32 @@ class SRResNet34(SRResNet):
             ),
             nn.InstanceNorm2d(self.channels),
         )
+
+
+class SRResNet34Mask(SRResNet):
+    def __init__(self):
+        super().__init__()
+
+        # Create 16 ResBlocks to build a SRResNet34
+        self._create_blocks(16)
+
+        self.postBlock = nn.Sequential(
+            nn.Conv2d(
+                in_channels=self.channels,
+                out_channels=self.channels,
+                kernel_size=3,
+                stride=1,
+                padding=1,
+                bias=False,
+            ),
+            nn.InstanceNorm2d(self.channels),
+        )
+
+    def forward(self, x):
+        mask = x == 0
+        pred = super().forward(x)["pred"]
+
+        return {"pred": pred, "mask": mask}
 
 
 class SRResNet34_unc(SRResNet):

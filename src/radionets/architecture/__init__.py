@@ -5,6 +5,7 @@ from .archs import (
     SRResNet34,
     SRResNet34_unc,
     SRResNet34_unc_no_grad,
+    SRResNet34Mask,
 )
 from .blocks import BottleneckResBlock, Decoder, Encoder, NNBlock, SRBlock
 from .layers import LocallyConnected2d
@@ -23,6 +24,7 @@ __all__ = [
     "SRResNet",
     "SRResNet18",
     "SRResNet34",
+    "SRResNet34Mask",
     "SRResNet34_unc",
     "SRResNet34_unc_no_grad",
     "Uncertainty",
