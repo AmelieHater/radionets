@@ -77,7 +77,7 @@ def load_pre_model(learn, pre_path, visualize=False, plot_loss=False):
     name_pretrained = Path(pre_path).stem
     print(f"\nLoad pretrained model: {name_pretrained}\n")
     if torch.cuda.is_available() and not plot_loss:
-        checkpoint = torch.load(pre_path)
+        checkpoint = torch.load(pre_path, weights_only=False)
     else:
         checkpoint = torch.load(pre_path, map_location=torch.device("cpu"))
 
@@ -170,6 +170,119 @@ class LocallyConnected2d(nn.Module):
         return out
 
 
+class ComplexConv2d(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, stride, bias):
+        super().__init__()
+        self.conv_real = nn.Conv2d(
+            in_channels // 2,
+            out_channels // 2,
+            kernel_size,
+            stride=stride,
+            padding="same",
+            bias=bias,
+        )
+        self.conv_imag = nn.Conv2d(
+            in_channels // 2,
+            out_channels // 2,
+            kernel_size,
+            stride=stride,
+            padding="same",
+            bias=bias,
+        )
+
+    def forward(self, x):
+        real, imag = x.chunk(2, dim=1)  # Split real and imaginary parts
+        # Complex multiplication: (a+bi)(c+di) = (ac-bd) + (ad+bc)i
+        real_out = self.conv_real(real) - self.conv_imag(imag)
+        imag_out = self.conv_real(imag) + self.conv_imag(real)
+        return torch.cat([real_out, imag_out], dim=1)
+
+
+class ComplexInstanceNorm2d(nn.Module):
+    def __init__(self, num_features, eps=1e-5, affine=True):
+        super(ComplexInstanceNorm2d, self).__init__()
+        self.num_features = num_features // 2
+        self.eps = eps
+        self.affine = affine
+
+        if self.affine:
+            # Separate parameters for real and imaginary parts
+            self.weight_real = nn.Parameter(torch.ones(self.num_features))
+            self.weight_imag = nn.Parameter(torch.ones(self.num_features))
+            self.bias_real = nn.Parameter(torch.zeros(self.num_features))
+            self.bias_imag = nn.Parameter(torch.zeros(self.num_features))
+
+    def forward(self, x):
+        """
+        x: Complex tensor of shape [batch, channels, height, width]
+        First half of channels = real part, second half = imaginary part
+        """
+        real, imag = x.chunk(2, dim=1)
+
+        # Instance normalization for each part separately
+        # Calculate mean and variance across spatial dimensions (H, W)
+        real_mean = real.mean(dim=[2, 3], keepdim=True)
+        imag_mean = imag.mean(dim=[2, 3], keepdim=True)
+
+        real_var = real.var(dim=[2, 3], keepdim=True, unbiased=False)
+        imag_var = imag.var(dim=[2, 3], keepdim=True, unbiased=False)
+
+        # Normalize
+        real_norm = (real - real_mean) / torch.sqrt(real_var + self.eps)
+        imag_norm = (imag - imag_mean) / torch.sqrt(imag_var + self.eps)
+
+        if self.affine:
+            # Apply learnable parameters
+            real_norm = real_norm * self.weight_real.view(
+                1, -1, 1, 1
+            ) + self.bias_real.view(1, -1, 1, 1)
+            imag_norm = imag_norm * self.weight_imag.view(
+                1, -1, 1, 1
+            ) + self.bias_imag.view(1, -1, 1, 1)
+
+        return torch.cat([real_norm, imag_norm], dim=1)
+
+
+class ComplexPReLU(nn.Module):
+    def __init__(self, num_parameters=1, init=0.25):
+        """
+        Complex PReLU with separate parameters for real and imaginary parts
+
+        Args:
+            num_parameters: Number of parameters (1 for shared,
+            or num_channels for per-channel)
+            init: Initial value for the negative slope parameter
+        """
+        super(ComplexPReLU, self).__init__()
+        self.num_parameters = num_parameters
+
+        # Separate learnable parameters for real and imaginary parts
+        self.weight_real = nn.Parameter(torch.full((num_parameters,), init))
+        self.weight_imag = nn.Parameter(torch.full((num_parameters,), init))
+
+    def forward(self, x):
+        """
+        x: Complex tensor of shape [batch, 2*channels, height, width]
+        First half = real, second half = imaginary
+        """
+        real, imag = x.chunk(2, dim=1)
+
+        # Apply PReLU to each component
+        if self.num_parameters == 1:
+            # Shared parameter across all channels
+            real_out = torch.where(real >= 0, real, self.weight_real * real)
+            imag_out = torch.where(imag >= 0, imag, self.weight_imag * imag)
+        else:
+            # Per-channel parameters
+            weight_real = self.weight_real.view(1, -1, 1, 1)
+            weight_imag = self.weight_imag.view(1, -1, 1, 1)
+
+            real_out = torch.where(real >= 0, real, weight_real * real)
+            imag_out = torch.where(imag >= 0, imag, weight_imag * imag)
+
+        return torch.cat([real_out, imag_out], dim=1)
+
+
 class SRBlock(nn.Module):
     def __init__(self, ni, nf, stride=1):
         super().__init__()
@@ -183,13 +296,18 @@ class SRBlock(nn.Module):
         return self.convs(x) + self.idconv(self.pool(x))
 
     def _conv_block(self, ni, nf, stride):
+        # return nn.Sequential(
+        #     ComplexConv2d(ni, nf, 3, stride=stride, bias=False),
+        #     ComplexInstanceNorm2d(nf),
+        #     ComplexPReLU(),
+        #     ComplexConv2d(nf, nf, 3, stride=1, bias=False),
+        #     ComplexInstanceNorm2d(nf),
+        # )
         return nn.Sequential(
-            nn.Conv2d(
-                ni, nf, 3, stride=stride, padding=1, bias=False, padding_mode="zeros"
-            ),
+            nn.Conv2d(ni, nf, 3, stride=stride, bias=False, padding=1),
             nn.InstanceNorm2d(nf),
-            nn.PReLU(),
-            nn.Conv2d(nf, nf, 3, stride=1, padding=1, bias=False, padding_mode="zeros"),
+            nn.ReLU(),
+            nn.Conv2d(nf, nf, 3, stride=1, bias=False, padding=1),
             nn.InstanceNorm2d(nf),
         )
 
