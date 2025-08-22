@@ -28,11 +28,9 @@ class h5_dataset:
         return len(self.bundles)  # * self.num_img
 
     def __getitem__(self, i):
-        x = torch.from_numpy(np.array(self.open_bundle(self.bundles[i], "x"))).float()
-        y = torch.from_numpy(np.array(self.open_bundle(self.bundles[i], "y"))).float()
-        # x = self.open_image("x", i)
-        # y = self.open_image("y", i)
-        return x, y
+        x = torch.from_numpy(np.array(self.open_bundle(self.bundles[i], "x")))
+        y = torch.from_numpy(np.array(self.open_bundle(self.bundles[i], "y")))
+        return x.float(), y.float()
 
     def open_bundle(self, bundle_path, var):
         bundle = h5py.File(bundle_path, "r")
