@@ -76,7 +76,7 @@ class SRResNet(nn.Module):
         x0 = self.relu(x[:, 0].unsqueeze(1))
         x1 = self.hardtanh(x[:, 1].unsqueeze(1))
 
-        return torch.cat([x0, x1], dim=1)
+        return {"pred": torch.cat([x0, x1], dim=1)}
 
 
 class SRResNet18(SRResNet):
@@ -143,7 +143,7 @@ class SRResNet34_unc(SRResNet):
         x4 = x[:, 3].reshape(-1, 1, s // 2 + 1, s)
         x4 = self.elu(x4)
 
-        return torch.cat([x0, x3, x1, x4], dim=1)
+        return {"pred": torch.cat([x0, x3, x1, x4], dim=1)}
 
 
 class SRResNet34_unc_no_grad(SRResNet34_unc):
@@ -169,4 +169,4 @@ class SRResNet34_unc_no_grad(SRResNet34_unc):
         with torch.no_grad():
             x4 = self.elu(x4)
 
-        return torch.cat([x0, x3, x1, x4], dim=1)
+        return {"pred": torch.cat([x0, x3, x1, x4], dim=1)}
