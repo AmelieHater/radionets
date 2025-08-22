@@ -1,0 +1,1 @@
+The default training config is now bundled and shipped with the package as a shared data file
