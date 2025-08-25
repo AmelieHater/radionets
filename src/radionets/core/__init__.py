@@ -23,7 +23,7 @@ from .data import (
 )
 from .learner import define_learner, get_learner
 from .logging import setup_logger
-from .model import init_cnn, load_pre_model, save_model, symmetry
+from .model import init_cnn, load_pre_model, save_model
 
 __all__ = [
     "AvgLossCallback",
@@ -51,5 +51,4 @@ __all__ = [
     "save_fft_pair",
     "save_model",
     "setup_logger",
-    "symmetry",
 ]
