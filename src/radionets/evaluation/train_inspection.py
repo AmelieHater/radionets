@@ -414,11 +414,11 @@ def evaluate_dynamic_range(conf):
 
     LOGGER.info(
         f"Mean dynamic range for true source distributions:\
-            {round(dr_truths.mean())}"
+            {dr_truths.mean()}"
     )
     LOGGER.info(
         f"Mean dynamic range for predicted source distributions:\
-            {round(dr_preds.mean())}"
+            {dr_preds.mean()}"
     )
 
     LOGGER.info("Creating histogram of dynamic ranges.")

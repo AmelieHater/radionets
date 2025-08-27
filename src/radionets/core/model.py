@@ -9,7 +9,6 @@ __all__ = [
     "init_cnn",
     "load_pre_model",
     "save_model",
-    "symmetry",
 ]
 
 LOGGER = setup_logger(namespace=__name__)
@@ -101,20 +100,3 @@ def save_model(learn, model_path):
         },
         model_path,
     )
-
-
-def symmetry(x):
-    if x.shape[-1] % 2 != 0:
-        raise ValueError("The symmetry function only works for even image sizes.")
-    upper_half = x[:, :, 0 : x.shape[2] // 2, :].clone()
-    upper_left = upper_half[:, :, :, 0 : upper_half.shape[3] // 2].clone()
-    upper_right = upper_half[:, :, :, upper_half.shape[3] // 2 :].clone()
-    a = torch.flip(upper_left, dims=[-2, -1])
-    b = torch.flip(upper_right, dims=[-2, -1])
-
-    upper_half[:, :, :, 0 : upper_half.shape[3] // 2] = b
-    upper_half[:, :, :, upper_half.shape[3] // 2 :] = a
-
-    x[:, 0, x.shape[2] // 2 :, :] = upper_half[:, 0]
-    x[:, 1, x.shape[2] // 2 :, :] = -upper_half[:, 1]
-    return x

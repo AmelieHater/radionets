@@ -87,7 +87,6 @@ class H5DataSet:
 
         if data.shape[0] == 1:
             data = data.squeeze(0)
-
         return data.float()
 
 
@@ -221,5 +220,4 @@ def load_data(data_path, mode, fourier=False):
     data = sorted(data, key=lambda f: int("".join(filter(str.isdigit, str(f)))))
 
     ds = H5DataSet(data, tar_fourier=fourier)
-
     return ds
