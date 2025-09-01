@@ -1,8 +1,15 @@
 from torch import nn
 
+from radionets.architecture.layers import (
+    ComplexConv2d,
+    ComplexInstanceNorm2d,
+    ComplexPReLU,
+)
+
 __all__ = [
     "NNBlock",
     "SRBlock",
+    "ComplexSRBlock",
     "BottleneckResBlock",
     "Encoder",
     "Decoder",
@@ -194,6 +201,106 @@ class SRBlock(NNBlock):
         if self.dropout:
             blocks.insert(1, nn.Dropout(p=self.dropout))
             blocks.insert(4, nn.Rropout(p=self.dropout))
+
+        return blocks
+
+    def forward(self, x):
+        return self.convs(x) + self.idconv(self.pool(x))
+
+
+class ComplexSRBlock(NNBlock):
+    """Complex SRResNet building block.
+
+    Parameters
+    ----------
+    in_channels : int
+        Number of input channels.
+    out_channels : int
+        Number of output channels.
+    kernel_size : int, optional
+        Size of the convolution kernel. Default: 3
+    stride : int or tuple, optional
+        Stride for the cross-correlation. Default: 1
+    padding : int, optional
+        The amount of padding applied to the input.
+        Default: 0
+    groups : int, optional
+        Controls the behavior of input and output groups.
+        See :class:`~torch.nn.Conv2d`. Default: 1
+    dropout : bool or float, optional
+        Wether to apply dropout. If float > 0 this is
+        the dropout percentage. Default: False
+    """
+
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: int = 3,
+        *,
+        stride: int = 1,
+        padding: int = 0,
+        groups: int = 1,
+        dropout: int = 0,
+    ):
+        super().__init__(
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride=stride,
+            padding=padding,
+            groups=groups,
+            dropout=dropout,
+        )
+        """Complex SRResNet building block.
+
+        Parameters
+        ----------
+        in_channels : int
+            Number of input channels.
+        out_channels : int
+            Number of output channels.
+        kernel_size : int, optional
+            Size of the convolution kernel. Default: 3
+        stride : int or tuple, optional
+            Stride for the cross-correlation. Default: 1
+        padding : int, optional
+            The amount of padding applied to the input.
+            Default: 0
+        groups : int, optional
+            Controls the behavior of input and output groups.
+            See :class:`~torch.nn.Conv2d`. Default: 1
+        dropout : bool or float, optional
+            Wether to apply dropout. If float > 0 this is
+            the dropout percentage. Default: False
+        """
+
+        self.convs = nn.Sequential(*self._conv_block())
+
+    def _conv_block(self):
+        blocks = [
+            ComplexConv2d(
+                in_channels=self.in_channels,
+                out_channels=self.out_channels,
+                kernel_size=self.kernel_size,
+                stride=self.stride,
+                padding=1,
+                bias=False,
+            ),
+            nn.Dropout(p=self.dropout),
+            ComplexInstanceNorm2d(num_features=self.out_channels),
+            ComplexPReLU(num_parameters=2),
+            ComplexConv2d(
+                in_channels=self.in_channels,
+                out_channels=self.out_channels,
+                kernel_size=self.kernel_size,
+                stride=self.stride,
+                padding=1,
+                bias=False,
+            ),
+            nn.Dropout(p=self.dropout),
+            ComplexInstanceNorm2d(num_features=self.out_channels),
+        ]
 
         return blocks
 

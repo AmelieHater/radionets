@@ -74,7 +74,7 @@ def define_learner(data, arch, train_conf, lr_find=False, plot_loss=False):
             [
                 CometCallback(
                     name=train_conf["project_name"],
-                    test_data=train_conf["data_path"],
+                    validation_data=train_conf["data_path"],
                     plot_n_epochs=train_conf["plot_n_epochs"],
                     amp_phase=train_conf["amp_phase"],
                     scale=train_conf["scale"],

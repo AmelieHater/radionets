@@ -4,12 +4,21 @@ import torch
 from torch import nn
 
 from radionets.architecture.activation import GeneralReLU
-from radionets.architecture.blocks import SRBlock
+from radionets.architecture.blocks import ComplexSRBlock, SRBlock
+from radionets.architecture.layers import (
+    ComplexConv2d,
+    ComplexInstanceNorm2d,
+    ComplexPReLU,
+)
 
 __all__ = [
     "SRResNet",
+    "SRResNetComplex",
     "SRResNet18",
+    "SRResNet18Complex",
+    "SRResNet18AmpPhase",
     "SRResNet34",
+    "SRResNet34AmpPhase",
     "SRResNet34_unc",
     "SRResNet34_unc_no_grad",
 ]
@@ -71,7 +80,68 @@ class SRResNet(nn.Module):
         return {"pred": x}
 
 
+class SRResNetComplex(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.channels = 128
+
+        self.preBlock = nn.Sequential(
+            ComplexConv2d(
+                in_channels=2,
+                out_channels=self.channels,
+                kernel_size=3,
+                stride=1,
+            ),
+            ComplexPReLU(num_parameters=2),
+        )
+
+        self.postBlock = nn.Sequential(
+            ComplexConv2d(
+                in_channels=self.channels,
+                out_channels=self.channels,
+                kernel_size=3,
+                stride=1,
+                padding=1,
+                bias=False,
+            ),
+            ComplexInstanceNorm2d(self.channels),
+        )
+
+        self.final = nn.Sequential(
+            ComplexConv2d(
+                in_channels=self.channels,
+                out_channels=2,
+                kernel_size=9,
+                stride=1,
+                padding=4,
+            ),
+        )
+
+    def _create_blocks(self, n_blocks):
+        blocks = []
+        for _ in range(n_blocks):
+            blocks.append(ComplexSRBlock(64, 64))
+
+        self.blocks = nn.Sequential(*blocks)
+
+    def forward(self, input):
+        x = self.preBlock(input)
+        x = x + self.postBlock(self.blocks(x))
+        x = self.final(x)
+
+        return {"pred": x}
+
+
 class SRResNet18(SRResNet):
+    def __init__(self):
+        super().__init__()
+
+        # Create 8 ResBlocks to build a SRResNet18
+        self._create_blocks(8)
+
+
+class SRResNet18Complex(SRResNetComplex):
     def __init__(self):
         super().__init__()
 

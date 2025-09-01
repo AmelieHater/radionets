@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from fastai.callback.core import Callback, CancelBackwardException
+from matplotlib.colors import PowerNorm
 
 from radionets.core.logging import setup_logger
 from radionets.core.model import save_model
@@ -117,8 +118,11 @@ class CometCallback(Callback):
         fig, ax = plt.subplots(2, 2, figsize=(11, 8.5), layout="constrained")
         ax = ax.ravel()
 
+        lim_amp = check_vmin_vmax(img_true[0, 0])
         lim_phase = check_vmin_vmax(img_true[0, 1])
-        im1 = ax[0].imshow(pred[0, 0], cmap="inferno")
+        im1 = ax[0].imshow(
+            pred[0, 0], cmap="radionets.PuOr", vmin=-lim_amp, vmax=lim_amp
+        )
         make_axes_nice(fig, ax[0], im1, "Real")
 
         im2 = ax[1].imshow(
@@ -126,7 +130,9 @@ class CometCallback(Callback):
         )
         make_axes_nice(fig, ax[1], im2, "Imaginary")
 
-        im3 = ax[2].imshow(img_true[0, 0], cmap="inferno")
+        im3 = ax[2].imshow(
+            img_true[0, 0], cmap="radionets.PuOr", vmin=-lim_amp, vmax=lim_amp
+        )
         make_axes_nice(fig, ax[2], im3, "Org. Real")
 
         im4 = ax[3].imshow(
@@ -181,8 +187,10 @@ class CometCallback(Callback):
 
         fig, ax = plt.subplots(1, 3, figsize=(16, 4.5), layout="constrained")
 
-        im1 = ax[0].imshow(ifft_pred, vmax=ifft_truth.max(), cmap="inferno")
-        im2 = ax[1].imshow(ifft_truth, cmap="inferno")
+        im1 = ax[0].imshow(
+            ifft_pred, norm=PowerNorm(0.25, vmax=ifft_truth.max()), cmap="inferno"
+        )
+        im2 = ax[1].imshow(ifft_truth, norm=PowerNorm(0.25), cmap="inferno")
         a = check_vmin_vmax(ifft_pred - ifft_truth)
         im3 = ax[2].imshow(
             ifft_pred - ifft_truth, cmap="radionets.PuOr", vmin=-a, vmax=a
