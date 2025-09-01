@@ -241,7 +241,7 @@ class ComplexSRBlock(NNBlock):
         stride: int = 1,
         padding: int = 0,
         groups: int = 1,
-        dropout: bool | int = False,
+        dropout: int = 0,
     ):
         super().__init__(
             in_channels,
@@ -287,6 +287,7 @@ class ComplexSRBlock(NNBlock):
                 padding=1,
                 bias=False,
             ),
+            nn.Dropout(p=self.dropout),
             ComplexInstanceNorm2d(num_features=self.out_channels),
             ComplexPReLU(num_parameters=2),
             ComplexConv2d(
@@ -297,15 +298,9 @@ class ComplexSRBlock(NNBlock):
                 padding=1,
                 bias=False,
             ),
+            nn.Dropout(p=self.dropout),
             ComplexInstanceNorm2d(num_features=self.out_channels),
         ]
-
-        # NOTE: This will be included directly in the blocks
-        # list in a future release and is only here for
-        # compatibility reasons
-        if self.dropout:
-            blocks.insert(1, nn.Dropout(p=self.dropout))
-            blocks.insert(4, nn.Rropout(p=self.dropout))
 
         return blocks
 
