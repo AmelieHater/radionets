@@ -30,9 +30,11 @@ def read_config(config):
     train_conf["data_path"] = config["paths"]["data_path"]
     train_conf["model_path"] = config["paths"]["model_path"]
     train_conf["pre_model"] = config["paths"]["pre_model"]
+    train_conf["file_type"] = config["paths"]["file_type"]
 
     train_conf["quiet"] = config["mode"]["quiet"]
     train_conf["gpu"] = config["mode"]["gpu"]
+    train_conf["num_workers"]=config["mode"]["num_workers"]
 
     train_conf["comet_ml"] = config["logging"]["comet_ml"]
     train_conf["plot_n_epochs"] = config["logging"]["plot_n_epochs"]

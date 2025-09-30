@@ -57,6 +57,7 @@ def main(configuration_path, mode):
     data = create_databunch(
         data_path=train_conf["data_path"],
         fourier=train_conf["fourier"],
+        file_type=train_conf["file_type"],
         batch_size=train_conf["batch_size"],
     )
 

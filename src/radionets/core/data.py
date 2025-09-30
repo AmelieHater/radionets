@@ -194,7 +194,7 @@ def open_bundle_pack(path):
     return np.array(bundle_x), np.array(bundle_y), bundle_z
 
 
-def load_data(data_path, mode, fourier=False):
+def load_data(data_path, mode, file_type, fourier=False):
     """
     Load data set from a directory and return it as H5DataSet.
 
@@ -212,6 +212,9 @@ def load_data(data_path, mode, fourier=False):
     test_ds : H5DataSet
         dataset containing x and y images
     """
+    if file_type == ".pt":
+        return PTDataSet(data_path, mode, device)
+
     bundle_paths = get_bundles(data_path)
 
     data = np.sort(
@@ -221,3 +224,24 @@ def load_data(data_path, mode, fourier=False):
 
     ds = H5DataSet(data, tar_fourier=fourier)
     return ds
+
+
+class PTDataSet:
+    def __init__(self, path, mode, device):
+        self.path = path
+        unsorted_file_paths = path.glob(f"*{mode}*.pt")
+        self.file_paths = sorted(unsorted_file_paths, key=lambda s: int(re.search(r"\d+", s.stem).group()))
+        self.num_img = len(self.file_paths)
+        self.device = device
+
+    def __len__(self):
+        return self.num_img
+
+    def __getitem__(self, index):
+        file = torch.load(self.file_paths[index])
+        _x = file["X"].to(self.device).to_dense()
+        x = torch.stack([_x.real, _x.imag])
+        _y = file["y"].to(self.device)
+        y = torch.stack([_y.real, _y.imag])
+
+        return x, y
