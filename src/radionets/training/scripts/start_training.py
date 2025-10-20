@@ -84,7 +84,8 @@ def main(configuration_path, mode):
         if train_conf["pre_model"] != "none":
             learn.create_opt()
             load_pre_model(learn, train_conf["pre_model"])
-
+    
+        print(learn.show_training_loop())
         # Train the model, except interrupt
         # train_conf["comet_ml"] = True
         try:

@@ -5,6 +5,7 @@ import h5py
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset
+from tqdm import tqdm
 
 __all__ = [
     "DataBunch",
@@ -92,8 +93,8 @@ class H5DataSet:
 
 def get_dls(train_ds, valid_ds, batch_size, **kwargs):
     return (
-        DataLoader(train_ds, batch_size=batch_size, shuffle=True, **kwargs),
-        DataLoader(valid_ds, batch_size=batch_size, shuffle=True, **kwargs),
+        DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=0, **kwargs),
+        DataLoader(valid_ds, batch_size=batch_size, shuffle=True, num_workers=0, **kwargs),
     )
 
 
@@ -194,7 +195,7 @@ def open_bundle_pack(path):
     return np.array(bundle_x), np.array(bundle_y), bundle_z
 
 
-def load_data(data_path, mode, file_type, fourier=False):
+def load_data(data_path, mode, file_type, device, fourier=False):
     """
     Load data set from a directory and return it as H5DataSet.
 
@@ -226,22 +227,55 @@ def load_data(data_path, mode, file_type, fourier=False):
     return ds
 
 
-class PTDataSet:
-    def __init__(self, path, mode, device):
-        self.path = path
-        unsorted_file_paths = path.glob(f"*{mode}*.pt")
+class PTDataSet2:
+    def __init__(self, path, mode):
+        self.path = Path(path)
+        unsorted_file_paths = self.path.glob(f"*{mode}*.pt")
         self.file_paths = sorted(unsorted_file_paths, key=lambda s: int(re.search(r"\d+", s.stem).group()))
         self.num_img = len(self.file_paths)
-        self.device = device
 
     def __len__(self):
         return self.num_img
 
     def __getitem__(self, index):
         file = torch.load(self.file_paths[index])
-        _x = file["X"].to(self.device).to_dense()
+        _x = file["X"].to_dense()
         x = torch.stack([_x.real, _x.imag])
-        _y = file["y"].to(self.device)
+        _y = file["y"]
         y = torch.stack([_y.real, _y.imag])
 
-        return x, y
+        return x.float(), y.float()
+
+class PTDataSet:
+    def __init__(self, path, mode):
+        self.path = Path(path)
+        unsorted_file_paths = self.path.glob(f"*{mode}*.pt")
+        self.file_paths = sorted(unsorted_file_paths, key=lambda s: int(re.search(r"\d+", s.stem).group()))
+        self.num_img = len(self.file_paths)
+        _x = []
+        _y = []
+
+        print(f"loading {mode} dataset")
+        for file in tqdm(self.file_paths):
+            data = torch.load(file)
+            _x.append(self.load_x(data))
+            _y.append(self.load_y(data))
+
+        self.x = np.array(_x).astype(np.float32)
+        self.y = np.array(_y).astype(np.float32)
+
+    def load_x(self, data):
+        _x = data["X"].to_dense()
+        x = np.stack([_x.real, _x.imag])
+        return x.astype(np.float32)
+
+    def load_y(self, data):
+        _y = data["y"]
+        y = np.stack([_y.real, _y.imag])
+        return y.astype(np.float32)
+
+    def __len__(self):
+        return self.num_img
+
+    def __getitem__(self, index):
+        return self.x[index], self.y[index]
