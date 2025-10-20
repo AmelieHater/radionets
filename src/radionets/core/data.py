@@ -93,8 +93,8 @@ class H5DataSet:
 
 def get_dls(train_ds, valid_ds, batch_size, **kwargs):
     return (
-        DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=0, **kwargs),
-        DataLoader(valid_ds, batch_size=batch_size, shuffle=True, num_workers=0, **kwargs),
+        DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, **kwargs),
+        DataLoader(valid_ds, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, **kwargs),
     )
 
 
@@ -195,7 +195,7 @@ def open_bundle_pack(path):
     return np.array(bundle_x), np.array(bundle_y), bundle_z
 
 
-def load_data(data_path, mode, file_type, device, fourier=False):
+def load_data(data_path, mode, file_type, fourier=False):
     """
     Load data set from a directory and return it as H5DataSet.
 
@@ -214,7 +214,7 @@ def load_data(data_path, mode, file_type, device, fourier=False):
         dataset containing x and y images
     """
     if file_type == ".pt":
-        return PTDataSet(data_path, mode, device)
+        return PTDataSet(data_path, mode)
 
     bundle_paths = get_bundles(data_path)
 
@@ -261,8 +261,8 @@ class PTDataSet:
             _x.append(self.load_x(data))
             _y.append(self.load_y(data))
 
-        self.x = np.array(_x).astype(np.float32)
-        self.y = np.array(_y).astype(np.float32)
+        self.x = torch.tensor(_x).float()
+        self.y = torch.tensor(_y).float()
 
     def load_x(self, data):
         _x = data["X"].to_dense()

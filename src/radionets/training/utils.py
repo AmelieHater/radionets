@@ -15,10 +15,10 @@ from radionets.plotting.inspection import plot_loss
 LOGGER = setup_logger(namespace=__name__)
 
 
-def create_databunch(data_path, fourier, batch_size):
+def create_databunch(data_path, fourier, batch_size, file_type):
     # Load data sets
-    train_ds = load_data(data_path, "train", fourier=fourier)
-    valid_ds = load_data(data_path, "valid", fourier=fourier)
+    train_ds = load_data(data_path, "train", fourier=fourier, file_type=file_type)
+    valid_ds = load_data(data_path, "valid", fourier=fourier, file_type=file_type)
 
     # Create databunch with defined batchsize
     data = DataBunch(*get_dls(train_ds, valid_ds, batch_size))
