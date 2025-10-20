@@ -46,13 +46,13 @@ jobs:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
           # setup correct python version
-          sed -i -e "s/- python.*/- python=$PYTHON_VERSION/g" environment.yml
+          sed -i -e "s/- python.*/- python=$PYTHON_VERSION/g" environment-dev.yml
 
       - name: mamba setup
         if: matrix.install-method == 'mamba' &&  contains(github.event.pull_request.labels.*.name, 'documentation-only') == false
         uses: mamba-org/setup-micromamba@v2
         with:
-          environment-file: environment.yml
+          environment-file: environment-dev.yml
           cache-downloads: true
 
       - uses: astral-sh/setup-uv@v6
