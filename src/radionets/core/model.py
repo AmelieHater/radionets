@@ -81,6 +81,8 @@ def save_model(learn, model_path):
             norm_dict = {"max_scaling": 0}
         elif learn.normalize.mode == "all":
             norm_dict = {"all": 0}
+        elif not learn.normalize.mode:
+            norm_dict = {}
         else:
             raise ValueError(f"Undefined mode {learn.normalize.mode}, check for typos")
     else:
