@@ -1,0 +1,3 @@
+Handled ``learn.normalize = False`` in ``model.py``
+
+Fixed ``RuntimeError: main thread is not in main loop Tcl_AsyncDelete: async handler deleted by the wrong thread`` when using small model/dataset
