@@ -143,7 +143,7 @@ class CometCallback(Callback):
         self.experiment.log_figure(
             figure=fig, figure_name=f"{self.epoch + 1}_pred_epoch"
         )
-        plt.close("all")
+        plt.close()
 
     def plot_test_fft(self):
         img_test, img_true, _ = get_images(self.test_ds, 1, rand=False)
@@ -210,7 +210,7 @@ class CometCallback(Callback):
         self.experiment.log_figure(
             figure=fig, figure_name=f"{self.epoch + 1}_fft_epoch"
         )
-        plt.close("all")
+        plt.close()
 
     def after_epoch(self):
         if (self.epoch + 1) % self.plot_epoch == 0:
