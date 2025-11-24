@@ -136,15 +136,6 @@ class SRBlock(NNBlock):
         groups: int = 1,
         dropout: bool | int = False,
     ):
-        super().__init__(
-            in_channels,
-            out_channels,
-            kernel_size,
-            stride=stride,
-            padding=padding,
-            groups=groups,
-            dropout=dropout,
-        )
         """Default SRResNet building block.
 
         Parameters
@@ -167,6 +158,15 @@ class SRBlock(NNBlock):
             Wether to apply dropout. If float > 0 this is
             the dropout percentage. Default: False
         """
+        super().__init__(
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride=stride,
+            padding=padding,
+            groups=groups,
+            dropout=dropout,
+        )
 
         self.convs = nn.Sequential(*self._conv_block())
 
@@ -180,6 +180,7 @@ class SRBlock(NNBlock):
                 padding=1,
                 bias=False,
                 padding_mode="reflect",
+                groups=self.groups,
             ),
             nn.InstanceNorm2d(num_features=self.out_channels),
             nn.PReLU(),
@@ -191,6 +192,7 @@ class SRBlock(NNBlock):
                 padding=1,
                 bias=False,
                 padding_mode="reflect",
+                groups=self.groups,
             ),
             nn.InstanceNorm2d(num_features=self.out_channels),
         ]

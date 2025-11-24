@@ -14,6 +14,9 @@ from radionets.architecture.layers import (
 __all__ = [
     "SRResNet",
     "SRResNetComplex",
+    "SRResNetAmp",
+    "SRResNetPhase",
+    "SRResNet8",
     "SRResNet18",
     "SRResNet18Complex",
     "SRResNet18AmpPhase",
@@ -80,6 +83,92 @@ class SRResNet(nn.Module):
         return {"pred": x}
 
 
+class SRResNetSingleChannel(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.channels = 64
+
+        self.preBlock = nn.Sequential(
+            nn.Conv2d(
+                in_channels=1,
+                out_channels=self.channels,
+                kernel_size=9,
+                stride=1,
+                padding=4,
+                groups=1,
+            ),
+            nn.PReLU(),
+        )
+
+        self.postBlock = nn.Sequential(
+            nn.Conv2d(
+                in_channels=self.channels,
+                out_channels=self.channels,
+                kernel_size=3,
+                stride=1,
+                padding=1,
+                bias=False,
+            ),
+            nn.InstanceNorm2d(self.channels),
+        )
+
+        self.final = nn.Sequential(
+            nn.Conv2d(
+                in_channels=self.channels,
+                out_channels=1,
+                kernel_size=9,
+                stride=1,
+                padding=4,
+                groups=1,
+            ),
+        )
+
+        self.prelu = nn.PReLU()
+        self.hardtanh = nn.Hardtanh(-pi, pi)
+
+    def _create_blocks(self, n_blocks):
+        blocks = []
+        for _ in range(n_blocks):
+            blocks.append(SRBlock(64, 64, groups=1))
+
+        self.blocks = nn.Sequential(*blocks)
+
+
+class SRResNetAmp(SRResNetSingleChannel):
+    def __init__(self):
+        super().__init__()
+        self._create_blocks(8)
+
+    def forward(self, inputs):
+        x = inputs[:, 0, ...][:, None]
+        x = self.preBlock(x)
+        x = x + self.postBlock(self.blocks(x))
+        x = self.final(x)
+        x = self.prelu(x)
+
+        x = torch.cat((x, inputs[:, 1, ...][:, None]), dim=1)
+
+        return {"pred": x}
+    
+
+class SRResNetPhase(SRResNetSingleChannel):
+    def __init__(self):
+        super().__init__()
+        self._create_blocks(8)
+
+    def forward(self, inputs):
+        x = inputs[:, 1, ...][:, None]
+        x = self.preBlock(x)
+        x = x + self.postBlock(self.blocks(x))
+        x = self.final(x)
+        x = self.hardtanh(x)
+
+        x = torch.cat((inputs[:, 0, ...][:, None], x), dim=1)
+
+        return {"pred": x}
+
+
 class SRResNetComplex(nn.Module):
     def __init__(self):
         super().__init__()
@@ -132,6 +221,12 @@ class SRResNetComplex(nn.Module):
 
         return {"pred": x}
 
+class SRResNet8(SRResNet):
+    def __init__(self):
+        super().__init__()
+
+        # Create 8 ResBlocks to build a SRResNet18
+        self._create_blocks(3)
 
 class SRResNet18(SRResNet):
     def __init__(self):

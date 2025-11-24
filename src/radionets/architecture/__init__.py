@@ -1,6 +1,7 @@
 from .activation import GeneralELU, GeneralReLU, Lambda
 from .archs import (
     SRResNet,
+    SRResNet8,
     SRResNet18,
     SRResNet18AmpPhase,
     SRResNet18Complex,
@@ -8,6 +9,8 @@ from .archs import (
     SRResNet34_unc,
     SRResNet34_unc_no_grad,
     SRResNet34AmpPhase,
+    SRResNetAmp,
+    SRResNetPhase,
 )
 from .blocks import BottleneckResBlock, Decoder, Encoder, NNBlock, SRBlock
 from .layers import LocallyConnected2d
@@ -24,6 +27,9 @@ __all__ = [
     "NNBlock",
     "SRBlock",
     "SRResNet",
+    "SRResNetAmp",
+    "SRResNetPhase",
+    "SRResNet8",
     "SRResNet18",
     "SRResNet18Complex",
     "SRResNet18AmpPhase",
