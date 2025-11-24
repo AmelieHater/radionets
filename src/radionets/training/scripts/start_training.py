@@ -3,6 +3,7 @@ from pathlib import Path
 
 import click
 import toml
+import torch
 from rich.pretty import pretty_repr
 
 from radionets.core.learner import define_learner
@@ -49,6 +50,11 @@ def main(configuration_path, mode):
     """
     config = toml.load(configuration_path)
     train_conf = read_config(config)
+
+    if isinstance(train_conf["gpu"], str):
+        torch.cuda.set_device(train_conf["gpu"])
+        train_conf["gpu"] = True
+
 
     LOGGER.info("Train config:")
     LOGGER.info(pretty_repr(train_conf))
