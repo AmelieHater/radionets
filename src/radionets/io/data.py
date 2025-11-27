@@ -287,8 +287,12 @@ def identity(x):
 
 class WebDatasetModule(LightningDataModule):
     """
-    PyTorch Lightning DataModule utilizing the WebDataset format.
+    PyTorch Lightning DataModule for handling visibility
+    data from WebDataset files.
 
+    This DataModule manages the loading and preparation
+    of the visibility datasets for training, validation,
+    testing, and prediction stages of radionets.
 
     Parameters
     ----------
@@ -315,15 +319,14 @@ class WebDatasetModule(LightningDataModule):
     target_transform : Callable, optional
         Transform applied to targets. Default: None
     shuffle_buffer : int, optional
-        Size of shuffle buffer for training. Default: 1000
+        Size of shuffle buffer for training. Default: None
 
     Notes
     -----
     WebDataset files should be created with the following structure:
-    Each sample should contain:
     - __key__: unique identifier
-    - input.npy: input visibility data as numpy array in binary file format
-    - target.npy: target image data as numpy array in binary file format
+    - *.input.npy: input visibility data as numpy array in binary file format
+    - *.target.npy: target image data as numpy array in binary file format
     """
 
     def __init__(
@@ -443,7 +446,7 @@ class WebDatasetModule(LightningDataModule):
 
     def _create_dataloader(self, dataset):
         """
-        Create a DataLoader with optimized settings.
+        Create a WebLoader with shuffling and batching.
 
         Parameters
         ----------
@@ -472,20 +475,48 @@ class WebDatasetModule(LightningDataModule):
         )
 
     def train_dataloader(self):
-        """Create training DataLoader with shuffling and repeat."""
+        """Create training DataLoader.
+
+        Returns
+        -------
+        :class:`torch.utils.data.DataLoader`
+            PyTorch DataLoader for the training dataset
+            with configured batch size and number of workers.
+        """
         loader = self._create_dataloader(self.train_dataset)
         return loader.with_epoch(self.train_length // (self.batch_size * 1))
 
     def val_dataloader(self):
-        """Create validation DataLoader."""
+        """Create validation DataLoader.
+
+        Returns
+        -------
+        :class:`torch.utils.data.DataLoader`
+            PyTorch DataLoader for the validation dataset
+            with configured batch size and number of workers.
+        """
         return self._create_dataloader(self.val_dataset).with_epoch(
             self.test_length // (self.batch_size * 1)
         )
 
     def test_dataloader(self):
-        """Create test DataLoader."""
+        """Create test DataLoader.
+
+        Returns
+        -------
+        :class:`torch.utils.data.DataLoader`
+            PyTorch DataLoader for the test dataset
+            with configured batch size and number of workers.
+        """
         return self._create_dataloader(self.test_dataset)
 
     def predict_dataloader(self):
-        """Create prediction DataLoader."""
+        """Create prediction DataLoader.
+
+        Returns
+        -------
+        :class:`torch.utils.data.DataLoader`
+            PyTorch DataLoader for the prediction dataset
+            with configured batch size and number of workers.
+        """
         return self._create_dataloader(self.predict_dataset)
