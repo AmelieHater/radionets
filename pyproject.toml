@@ -102,10 +102,7 @@ dev = [
 ]
 
 [project.scripts]
-radionets-simulation = "radionets.simulations.scripts.simulate_images:main"
-radionets-training = "radionets.training.scripts.start_training:main"
-radionets-evaluation = "radionets.evaluation.scripts.start_evaluation:main"
-radionets-quickstart = "radionets.tools.quickstart:quickstart"
+radionets = "radionets.tools.cli:main"
 
 [tool.hatch.version]
 source = "vcs"
