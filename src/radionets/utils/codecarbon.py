@@ -1,0 +1,20 @@
+from contextlib import contextmanager
+
+try:
+    from codecarbon import OfflineEmissionsTracker
+
+    _CODECARBON_AVAILABLE = True
+except ImportError:
+    _CODECARBON_AVAILABLE = False
+
+
+@contextmanager
+def carbontracker(train_config):
+    if _CODECARBON_AVAILABLE and train_config.codecarbon:
+        tracker = OfflineEmissionsTracker(**train_config.codecarbon.model_dump())
+        try:
+            yield tracker.start()
+        finally:
+            tracker.stop()
+    else:
+        yield None
