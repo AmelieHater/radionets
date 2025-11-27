@@ -1,8 +1,11 @@
+from collections.abc import Callable
 from pathlib import Path
 
 import h5py
 import numpy as np
+import pyarrow.parquet as pq
 import torch
+import webdataset as wds
 from lightning import LightningDataModule
 from natsort import natsorted
 from torch.utils.data import DataLoader, Dataset
@@ -275,3 +278,214 @@ class H5DataModule(LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
         )
+
+
+def identity(x):
+    """Identity function for no-op transformations."""
+    return x
+
+
+class WebDatasetModule(LightningDataModule):
+    """
+    PyTorch Lightning DataModule utilizing the WebDataset format.
+
+
+    Parameters
+    ----------
+    data_dir : str or Path
+        Directory containing WebDataset tar files.
+        Expected structure:
+        - train-{000000..NNNNN}.tar
+        - valid-{000000..NNNNN}.tar
+        - test-{000000..NNNNN}.tar
+    epochs : int
+        Number of epochs. Used for WebDataset.with_epoch().
+    batch_size : int, optional
+        Number of samples per batch. Default: 32
+    fourier : bool, optional
+        Whether inputs/targets are in Fourier space. Default: False
+    num_workers : int, optional
+        Number of worker processes. Default: 10
+    prefetch_factor : int, optional
+        Number of batches to prefetch per worker. Default: 2
+    persistent_workers : bool, optional
+        Keep workers alive between epochs. Default: True
+    transform : Callable, optional
+        Transform applied to inputs. Default: None
+    target_transform : Callable, optional
+        Transform applied to targets. Default: None
+    shuffle_buffer : int, optional
+        Size of shuffle buffer for training. Default: 1000
+
+    Notes
+    -----
+    WebDataset files should be created with the following structure:
+    Each sample should contain:
+    - __key__: unique identifier
+    - input.npy: input visibility data as numpy array in binary file format
+    - target.npy: target image data as numpy array in binary file format
+    """
+
+    def __init__(
+        self,
+        data_dir: str | Path,
+        *,
+        batch_size: int = 32,
+        fourier: bool = False,
+        num_workers: int = 10,
+        prefetch_factor: int = 2,
+        persistent_workers: bool = True,
+        transform: Callable | None = None,
+        target_transform: Callable | None = None,
+        shuffle_buffer: int | None = None,
+        **kwargs,
+    ):
+        super().__init__()
+        self.data_dir = Path(data_dir)
+        self.batch_size = batch_size
+        self.fourier = fourier
+        self.num_workers = num_workers
+        self.prefetch_factor = prefetch_factor
+        self.persistent_workers = persistent_workers
+        self.transform = transform or identity
+        self.target_transform = target_transform or identity
+        self.shuffle_buffer = shuffle_buffer
+
+        self._get_dataset_lengths()
+
+        self.save_hyperparameters(ignore=["transform", "target_transform"])
+
+    def _get_dataset_lengths(self):
+        train_parquet = list(self.data_dir.glob("train-*.parquet"))[0]
+        valid_parquet = list(self.data_dir.glob("valid-*.parquet"))[0]
+        test_parquet = list(self.data_dir.glob("test-*.parquet"))[0]
+
+        self.train_length = (
+            pq.read_table(train_parquet)
+            .to_pandas()["total_samples_in_dataset"]
+            .values[0]
+        )
+        self.valid_length = (
+            pq.read_table(valid_parquet)
+            .to_pandas()["total_samples_in_dataset"]
+            .values[0]
+        )
+        self.test_length = (
+            pq.read_table(test_parquet)
+            .to_pandas()["total_samples_in_dataset"]
+            .values[0]
+        )
+
+    def _create_dataset(self, mode: str, shuffle: bool = True):
+        """
+        Create a WebDataset pipeline for the specified mode.
+
+        Parameters
+        ----------
+        mode : str
+            One of 'train', 'valid', or 'test'.
+        shuffle : bool, optional
+            Whether to shuffle the data. Default: False
+
+        Returns
+        -------
+        wds.WebDataset
+            Configured WebDataset pipeline.
+        """
+        urls = sorted(map(str, self.data_dir.glob(f"{mode}-*.tar")))
+
+        if not urls:
+            raise ValueError(
+                f"No WebDataset shards found for mode '{mode}' in {self.data_dir}. "
+                f"Expected pattern: {mode}-{{000000..NNNNN}}.tar"
+            )
+        if shuffle:
+            shuffle = self.batch_size
+
+        if not self.shuffle_buffer:
+            self.shuffle_buffer = 10 * self.batch_size
+
+        dataset = (
+            wds.WebDataset(urls, shardshuffle=True, nodesplitter=wds.split_by_node)
+            .decode()
+            .to_tuple("input.npy", "target.npy")
+            .map_tuple(
+                lambda x: torch.from_numpy(x).float(),
+                lambda y: torch.from_numpy(y).float(),
+            )
+            .map_tuple(self.transform, self.target_transform)
+            .batched(self.batch_size)
+        )
+
+        return dataset
+
+    def setup(self, stage: str):
+        """
+        Set up datasets for the specified stage.
+
+        Parameters
+        ----------
+        stage : str
+            One of 'fit', 'test', or 'predict'.
+        """
+        match stage:
+            case "fit":
+                self.train_dataset = self._create_dataset("train", shuffle=True)
+                self.val_dataset = self._create_dataset("valid", shuffle=False)
+            case "test":
+                self.test_dataset = self._create_dataset("test", shuffle=False)
+            case "predict":
+                self.predict_dataset = self._create_dataset("test", shuffle=False)
+            case _:
+                raise ValueError(
+                    f"Stage '{stage}' is not available in {self.__class__.__name__}"
+                )
+
+    def _create_dataloader(self, dataset):
+        """
+        Create a DataLoader with optimized settings.
+
+        Parameters
+        ----------
+        dataset : wds.WebDataset
+            WebDataset to wrap.
+
+        Returns
+        -------
+        wds.WebLoader
+            WebLoader DataLoader.
+        """
+        return (
+            wds.WebLoader(
+                dataset,
+                num_workers=self.num_workers,
+                batch_size=None,
+                prefetch_factor=self.prefetch_factor if self.num_workers > 0 else None,
+                persistent_workers=self.persistent_workers
+                if self.num_workers > 0
+                else False,
+                pin_memory=True,
+            )
+            .unbatched()
+            .shuffle(self.shuffle_buffer)
+            .batched(self.batch_size)
+        )
+
+    def train_dataloader(self):
+        """Create training DataLoader with shuffling and repeat."""
+        loader = self._create_dataloader(self.train_dataset)
+        return loader.with_epoch(self.train_length // (self.batch_size * 1))
+
+    def val_dataloader(self):
+        """Create validation DataLoader."""
+        return self._create_dataloader(self.val_dataset).with_epoch(
+            self.test_length // (self.batch_size * 1)
+        )
+
+    def test_dataloader(self):
+        """Create test DataLoader."""
+        return self._create_dataloader(self.test_dataset)
+
+    def predict_dataloader(self):
+        """Create prediction DataLoader."""
+        return self._create_dataloader(self.predict_dataset)
