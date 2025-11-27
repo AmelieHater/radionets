@@ -3,9 +3,9 @@ from math import pi
 import torch
 from torch import nn
 
-from radionets.architecture.activation import GeneralReLU
-from radionets.architecture.blocks import ComplexSRBlock, SRBlock
-from radionets.architecture.layers import (
+from .activation import GeneralReLU
+from .blocks import ComplexSRBlock, SRBlock
+from .layers import (
     ComplexConv2d,
     ComplexInstanceNorm2d,
     ComplexPReLU,
@@ -65,10 +65,10 @@ class SRResNet(nn.Module):
             ),
         )
 
-    def _create_blocks(self, n_blocks):
+    def _create_blocks(self, n_blocks, **kwargs):
         blocks = []
         for _ in range(n_blocks):
-            blocks.append(SRBlock(64, 64))
+            blocks.append(SRBlock(64, 64, **kwargs))
 
         self.blocks = nn.Sequential(*blocks)
 
@@ -118,10 +118,10 @@ class SRResNetComplex(nn.Module):
             ),
         )
 
-    def _create_blocks(self, n_blocks):
+    def _create_blocks(self, n_blocks, **kwargs):
         blocks = []
         for _ in range(n_blocks):
-            blocks.append(ComplexSRBlock(64, 64))
+            blocks.append(ComplexSRBlock(64, 64, **kwargs))
 
         self.blocks = nn.Sequential(*blocks)
 
