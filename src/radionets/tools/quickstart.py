@@ -6,13 +6,21 @@ import toml
 from rich.pretty import pretty_repr
 
 from radionets import __version__
-from radionets.core.logging import setup_logger
+from radionets.core.logging import _setup_logger
 
 
 @click.command()
 @click.argument(
     "config_path",
     type=click.Path(dir_okay=True),
+)
+@click.option(
+    "-m",
+    "--mode",
+    type=click.Choice(["train", "eval"]),
+    default="train",
+    help="""What config file to create at config_path.
+        Valid are {train, eval}. Default: train""",
 )
 @click.option(
     "-y",
@@ -22,28 +30,38 @@ from radionets.core.logging import setup_logger
     is_flag=True,
     help="Overwrite file if it already exists.",
 )
-def quickstart(
+def main(
     config_path: str | Path,
+    mode: str = "train",
     overwrite: bool = False,
 ) -> None:
-    """Quickstart CLI tool for pyvisgen. Creates
-    a copy of the default simulation configuration
+    """Quickstart CLI tool for radionets. Creates
+    a copy of the default train or eval configuration
     file at the specified path.
 
     Parameters
     ----------
     config_path : str or Path
         Path to write the config to.
+    mode : str, optional
+        Determines the type of config. Either 'train'
+        or 'eval' are valid. Default: 'train'
+    overwrite : bool, optional
+        If ``True``, overwrites the config file if it already
+        exists. Default: ``False``
 
     Notes
     -----
     If a directory is given, this tool will create
-    a file called 'radionets_default_train_config.toml'
+    a file called 'radionets_default_{train,eval}_config.toml'
     inside that directory.
     """
-    log = setup_logger(namespace=__name__, tracebacks_suppress=[click])
+    if mode not in ["train", "eval"]:
+        raise ValueError("unkown mode: expected one of {train, eval}.")
 
-    msg = f"This is the pyvisgen [blue]v{__version__}[/] quickstart tool"
+    log = _setup_logger(namespace=__name__, tracebacks_suppress=[click])
+
+    msg = f"This is the radionets [blue]v{__version__}[/] quickstart tool"
     log.info(msg, extra={"markup": True, "highlighter": None})
     log.info((len(msg) - len("[blue][/]")) * "=")
 
@@ -51,18 +69,24 @@ def quickstart(
         config_path = Path(config_path)
 
     root = sysconfig.get_path("data", sysconfig.get_default_scheme())
-    default_config_path = Path(
-        root + "/share/configs/radionets_default_train_config.toml"
-    )
 
+    if mode == "train":
+        default_config_path = Path(
+            root + "/share/configs/radionets_default_train_config.toml"
+        )
+    else:
+        default_config_path = Path(
+            root + "/share/configs/radionets_default_eval_config.toml"
+        )
+
+    log.info(f"Loading default radionets {mode} configuration...")
     with open(default_config_path) as f:
         default_config = toml.load(f)
 
-    log.info("Loading default pyvisgen configuration:")
     log.info(pretty_repr(default_config))
 
     if config_path.is_dir():
-        config_path /= "radionets_default_train_config.toml"
+        config_path /= f"radionets_default_{mode}_config.toml"
 
     # write_file is used below; the following if statement acts as
     # a switch, toggling write_file to False if the user does not
@@ -86,4 +110,4 @@ def quickstart(
 
 
 if __name__ == "__main__":
-    quickstart()
+    main()
