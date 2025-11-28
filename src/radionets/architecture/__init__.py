@@ -11,7 +11,7 @@ from .archs import (
 )
 from .blocks import BottleneckResBlock, Decoder, Encoder, NNBlock, SRBlock
 from .layers import LocallyConnected2d
-from .unc_archs import Uncertainty, UncertaintyWrapper
+from .uncertainty_archs import Uncertainty, UncertaintyWrapper
 
 __all__ = [
     "BottleneckResBlock",
