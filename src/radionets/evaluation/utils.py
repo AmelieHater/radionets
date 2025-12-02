@@ -11,7 +11,7 @@ def get_ifft(image, amp_phase=False, scale=False, uncertainty=False):
     torch.tensor
         Inverse FFT of provided image data.
     """
-    if isinstance(image, np.ndimage):
+    if isinstance(image, np.ndarray):
         image = torch.from_numpy(image)
 
     if len(image.shape) == 3:
