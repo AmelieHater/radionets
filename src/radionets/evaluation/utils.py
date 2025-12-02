@@ -85,6 +85,6 @@ def apply_symmetry(image, uncertainty: bool = False) -> torch.tensor:
     if not uncertainty:
         lower_half[:, 1, ...] *= -1
 
-    full_image[..., half_width + overlap :, :] = lower_half
+    full_image[..., half_width + 1 :, :] = lower_half
 
     return full_image
