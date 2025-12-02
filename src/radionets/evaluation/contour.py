@@ -1,52 +1,63 @@
-import matplotlib as mpl
+from typing import TYPE_CHECKING
+
 import matplotlib.pyplot as plt
 import numpy as np
 
+if TYPE_CHECKING:
+    from matplotlib.contour import QuadContourSet
+    from numpy.typing import ArrayLike
 
-def compute_area_ratio(CS_pred, CS_truth):
-    """Compute the ratio of the areas of truth and prediction.
+
+def _compute_source_area(vertices: ArrayLike) -> float:
+    """Helper function to compute area of a source
+    using the shoelace formula.
 
     Parameters
     ----------
-    CS_pred : contour object
+    vertices : :func:`~numpy.ndarray`, shape (N, 2)
+        Polygon (source) vertices as (x, y) coordinates.
+
+    Returns
+    -------
+    float
+        Area of the source.
+    """
+    x = vertices[:, 0]
+    y = vertices[:, 1]
+
+    s1 = np.dot(x, np.roll(y, -1))
+    s2 = np.dot(y, np.roll(x, -1))
+
+    return 0.5 * np.abs(s1 - s2)
+
+
+def compute_area_ratio(cs_pred: QuadContourSet, cs_truth: QuadContourSet) -> float:
+    """Computes the ratio of true and predicted source areas.
+
+    Parameters
+    ----------
+    cs_pred : :class:`~matplotlib.contour.QuadContourSet`
         contour object of prediction
-    CS_truth : contour object
+    cs_truth : :class:`~matplotlib.contour.QuadContourSet`
         contour object of truth
 
     Returns
     -------
     float
-        ratio between area of truth and prediction
+        Ratio between true and predicted source areas.
     """
-    areas_truth = np.array([])
-    areas_pred = np.array([])
-
-    for area in CS_truth.get_paths():
-        truth_x = area.vertices[:, 0]
-        truth_y = area.vertices[:, 1]
-
-        area_truth = 0.5 * np.sum(
-            truth_y[:-1] * np.diff(truth_x) - truth_x[:-1] * np.diff(truth_y)
-        )
-        area_truth = np.abs(area_truth)
-        areas_truth = np.append(areas_truth, area_truth)
-
-    for area in CS_pred.get_paths():
-        pred_x = area.vertices[:, 0]
-        pred_y = area.vertices[:, 1]
-
-        area_pred = 0.5 * np.sum(
-            pred_y[:-1] * np.diff(pred_x) - pred_x[:-1] * np.diff(pred_y)
-        )
-        area_pred = np.abs(area_pred)
-        areas_pred = np.append(areas_pred, area_pred)
+    areas_pred = np.array(
+        [_compute_source_area(path.vertices for path in cs_pred.get_paths())]
+    )
+    areas_truth = np.array(
+        [_compute_source_area(path.vertices for path in cs_truth.get_paths())]
+    )
 
     return areas_pred.sum() / areas_truth.sum()
 
 
-def area_of_contour(ifft_pred, ifft_truth):
-    """Create first contour of prediction and truth and return
-    the area ratio.
+def area_of_contour(ifft_pred: ArrayLike, ifft_truth: ArrayLike) -> float:
+    """Compute area ratio at 5% of the maximum of prediction and truth.
 
     Parameters
     ----------
@@ -60,34 +71,46 @@ def area_of_contour(ifft_pred, ifft_truth):
     float
         area difference
     """
-    mpl.use("Agg")
-
     levels = [ifft_truth.max() * 0.05]
 
-    CS1 = plt.contour(ifft_pred, levels=levels)
+    fig, ax = plt.subplots()
+    cs_pred = ax.contour(ifft_pred, levels=levels)
+    cs_truth = ax.contour(ifft_truth, levels=levels)
+    plt.close(fig)
 
-    plt.close()
-
-    CS2 = plt.contour(ifft_truth, levels=levels)
-
-    val = compute_area_ratio(CS1, CS2)
-    mpl.rcParams.update(mpl.rcParamsDefault)
-    return val
+    return compute_area_ratio(cs_pred, cs_truth)
 
 
-def analyse_intensity(pred, truth):
-    if len(pred.shape) == 2:
-        pred = pred.reshape(1, pred.shape[-2], pred.shape[-1])
-        truth = truth.reshape(1, truth.shape[-2], truth.shape[-1])
+def analyse_intensity(pred: ArrayLike, truth: ArrayLike) -> tuple[float, float]:
+    """Compute intensity ratios between prediction
+    and ground truth images.
 
-    threshold = (truth.max(-1).max(-1) * 0.05).reshape(truth.shape[0], 1, 1)
+    Parameters
+    ----------
+    pred : :func:`~numpy.ndarray`, shape (..., H, W)
+        Prediction image(s).
+    truth : :func:`~numpy.ndarray`, shape (..., H, W)
+        Ground truth image(s).
+
+    Returns
+    -------
+    sum_ratio : :func:`~numpy.ndarray`
+        Ratio of summed intensities (prediction / truth).
+    peak_ratio : :func:`~numpy.ndarray`
+        Ratio of peak intensities (prediction / truth).
+    """
+    if pred.ndim == 2:
+        pred = pred[None, ...]
+
+    if truth.ndim == 2:
+        truth = truth[None, ...]
+
+    threshold = truth.max(axis=(-2, -1)) * 0.05
+
     source_truth = np.where(truth > threshold, truth, 0)
     source_pred = np.where(pred > threshold, pred, 0)
 
-    sum_truth = source_truth.sum(-1).sum(-1)
-    sum_pred = source_pred.sum(-1).sum(-1)
+    sum_ratio = source_pred.sum(axis=(-2, -1)) / source_truth.sum(axis=(-2, -1))
+    peak_ratio = source_pred.max(axis=(-2, -1)) / source_truth.peak(axis=(-2, -1))
 
-    peak_truth = source_truth.max(-1).max(-1)
-    peak_pred = source_pred.max(-1).max(-1)
-
-    return sum_pred / sum_truth, peak_pred / peak_truth
+    return sum_ratio, peak_ratio
