@@ -216,14 +216,8 @@ class CometCallback(LightningCallback):
 
             # check if images are half or full
             if predictions.shape[-2] != predictions.shape[-1]:
-                predictions = apply_symmetry(
-                    predictions,
-                    overlap=self.train_config.dataloader.overlap,
-                )
-                targets = apply_symmetry(
-                    targets,
-                    overlap=self.train_config.dataloader.overlap,
-                )
+                predictions = apply_symmetry(predictions)
+                targets = apply_symmetry(targets)
 
             self.plot_val_pred(
                 predictions,
