@@ -1,73 +1,181 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
 
+if TYPE_CHECKING:
+    from numpy.typing import ArrayLike, NDArray
 
-def get_boxsize(num_corners, num_pixel=63):
-    factors = np.array([0.3, 0.22, 0.16])
-    size = int(num_pixel * factors[num_corners - 2])
-    return size
-
-
-def select_box(rms, sensitivity=1e-6):
-    for arr in rms:
-        arr[arr > sensitivity] = 0
-    rms_boxes = rms.astype(bool).sum(axis=0)
-    return rms_boxes
+_BOX_FACTORS = np.array([0.3, 0.22, 0.16])
 
 
-def compute_rms(batch, size):
-    rms1 = rms2 = rms3 = rms4 = np.ones(len(batch)) * -1
-    rms1 = np.sqrt((batch[:, :size, :size].reshape(-1, size**2) ** 2).mean(axis=1))
-    rms2 = np.sqrt((batch[:, :size, -size:].reshape(-1, size**2) ** 2).mean(axis=1))
-    rms3 = np.sqrt((batch[:, -size:, :size].reshape(-1, size**2) ** 2).mean(axis=1))
-    rms4 = np.sqrt((batch[:, -size:, -size:].reshape(-1, size**2) ** 2).mean(axis=1))
-    return np.stack([rms1, rms2, rms3, rms4], axis=0)
+def get_boxsize(num_corners: int, num_pixel: int = 63) -> int:
+    """
+    Compute corner box size based on number of corners used.
+
+    Parameters
+    ----------
+    num_corners : int
+        Number of corners to use (2, 3, or 4).
+    num_pixel : int, optional
+        Image size in pixels. Default: 63
+
+    Returns
+    -------
+    int
+        Box size in pixels.
+    """
+    return int(num_pixel * _BOX_FACTORS[num_corners - 2])
 
 
-def get_rms(ifft_truth, ifft_pred):
-    rms_4_truth = compute_rms(ifft_truth, get_boxsize(4))
-    rms_boxes = select_box(rms_4_truth, 1e-6)
-    rms_3_truth = compute_rms(ifft_truth, get_boxsize(3))
-    select_box(rms_3_truth)
-    rms_2_truth = compute_rms(ifft_truth, get_boxsize(2))
-    select_box(rms_2_truth)
+def select_box(rms: NDArray, sensitivity: float = 1e-6) -> NDArray:
+    """
+    Select valid corner boxes based on RMS threshold.
 
-    rms_4_pred = compute_rms(ifft_pred, get_boxsize(4))
-    rms_3_pred = compute_rms(ifft_pred, get_boxsize(3))
-    rms_2_pred = compute_rms(ifft_pred, get_boxsize(2))
+    Parameters
+    ----------
+    rms : :func:`~numpy.ndarray`, shape (4, B)
+        RMS values for each corner.
+    sensitivity : float, optional
+        Threshold below which corners are considered valid.
+        Default: 1e-6.
 
-    rms_3_pred[rms_3_truth == 0] = 0
-    rms_2_pred[rms_2_truth == 0] = 0
+    Returns
+    -------
+    :func:`numpy.ndarray`, shape (B,)
+        Number of valid corners per sample.
+    """
+    valid_corners = rms <= sensitivity
+    return valid_corners.sum(axis=0)
 
-    rms_truth = np.zeros(len(rms_boxes))
-    rms_truth[rms_boxes == 4] = (
-        np.sqrt(rms_4_truth[0:4, rms_boxes == 4] ** 2).sum(axis=0) / 4
+
+def compute_rms(batch: ArrayLike, size: int) -> NDArray:
+    """
+    Compute RMS in all four corner boxes.
+
+    Parameters
+    ----------
+    batch : :func:`~numpy.ndarray`
+        Batch of images, shape (B, H, W).
+    size : int
+        Corner box size in pixels.
+
+    Returns
+    -------
+    :func:`numpy.ndarray`
+        RMS values for each corner, shape (4, B).
+    """
+    corners = np.stack(
+        [
+            batch[:, :size, :size],  # top left
+            batch[:, :size, -size:],  # top right
+            batch[:, -size:, :size],  # bottom left
+            batch[:, -size:, -size:],  # bottom right
+        ]
     )
-    rms_truth[rms_boxes == 3] = (
-        np.sqrt(rms_3_truth[0:4, rms_boxes == 3] ** 2).sum(axis=0) / 3
-    )
-    rms_truth[rms_boxes == 2] = (
-        np.sqrt(rms_2_truth[0:4, rms_boxes == 2] ** 2).sum(axis=0) / 2
-    )
 
-    rms_pred = np.zeros(len(rms_boxes))
-    rms_pred[rms_boxes == 4] = (
-        np.sqrt(rms_4_pred[0:4, rms_boxes == 4] ** 2).sum(axis=0) / 4
-    )
-    rms_pred[rms_boxes == 3] = (
-        np.sqrt(rms_3_pred[0:4, rms_boxes == 3] ** 2).sum(axis=0) / 3
-    )
-    rms_pred[rms_boxes == 2] = (
-        np.sqrt(rms_2_pred[0:4, rms_boxes == 2] ** 2).sum(axis=0) / 2
-    )
-    corners = np.ones((rms_4_truth.shape[-1], 4))
-    corners[rms_4_truth.swapaxes(1, 0) == 0] = 0
+    return np.sqrt((corners.reshape(4, len(batch), size * size) ** 2).mean(axis=2))
+
+
+def get_rms(
+    ifft_truth: NDArray,
+    ifft_pred: NDArray,
+    sensitivity: float = 1e-6,
+) -> tuple[NDArray, NDArray, NDArray, NDArray]:
+    """
+    Compute RMS values for ground truth and prediction.
+
+    Parameters
+    ----------
+    ifft_truth : :func:`numpy.ndarray`, shape (B, H, W)
+        Ground truth images.
+    ifft_pred : :func:`numpy.ndarray`, shape (B, H, W)
+        Predicted images.
+    sensitivity : float, optional
+        Threshold below which corners are considered valid.
+        Default: 1e-6.
+
+    Returns
+    -------
+    rms_truth : :func:`~numpy.ndarray`, shape (B,)
+        Averaged RMS for ground truth.
+    rms_pred : :func:`~numpy.ndarray`, shape (B,)
+        Averaged RMS for predictions.
+    rms_boxes : :func:`~numpy.ndarray`, shape (B,)
+        Number of valid corners per sample.
+    corners : :func:`~numpy.ndarray`, shape (B, 4)
+        Corner validity mask.
+    """
+    _rms_truth_boxes = {}
+    _rms_pred_boxes = {}
+
+    for num_corners in [4, 3, 2]:
+        size = get_boxsize(num_corners)
+        _rms_truth_boxes[num_corners] = compute_rms(ifft_truth, size)
+        _rms_pred_boxes[num_corners] = compute_rms(ifft_pred, size)
+
+    rms_boxes = select_box(_rms_truth_boxes[4], sensitivity=sensitivity)
+    current_batch_size = len(ifft_pred)
+
+    corners = (_rms_truth_boxes[4] <= sensitivity).T.astype(np.float64)
+
+    for num_corners in [3, 2]:
+        invalid_mask = _rms_truth_boxes[num_corners] > sensitivity
+        _rms_pred_boxes[4][invalid_mask] = 0
+
+    rms_truth = np.zeros(current_batch_size)
+    rms_pred = np.zeros(current_batch_size)
+
+    for num_corners in [4, 3, 2]:
+        mask = rms_boxes == num_corners
+
+        if not mask.any():
+            continue
+
+        rms_truth[mask] = (
+            np.abs(_rms_truth_boxes[num_corners][:, mask]).sum(axis=0) / num_corners
+        )
+        rms_pred[mask] = (
+            np.abs(_rms_pred_boxes[num_corners][:, mask]).sum(axis=0) / num_corners
+        )
+
     return rms_truth, rms_pred, rms_boxes, corners
 
 
 def calc_dr(ifft_truth, ifft_pred):
+    """
+    Calculate dynamic range for ground truth and predicted images.
+
+    The dynamic range is the peak value divided by RMS
+    noise in corner (off-)regions (i.e., where no signal is expected).
+
+    Parameters
+    ----------
+    ifft_truth : :func:`~numpy.ndarray`
+        Ground truth inverse FFT images (image space), shape (B, H, W).
+    ifft_pred : :func:`~numpy.ndarray`
+        Predicted inverse FFT images (image space), shape (B, H, W).
+
+    Returns
+    -------
+    dr_truth : :func:`~numpy.ndarray`
+        Dynamic range for truth.
+    dr_pred : :func:`~numpy.ndarray`
+        Dynamic range for predictions.
+    rms_boxes : np. ndarray
+        Number of valid corners per sample.
+    corners : :func:`~numpy.ndarray`
+        Corner validity mask.
+    """
     rms_truth, rms_pred, rms_boxes, corners = get_rms(ifft_truth, ifft_pred)
-    peak_vals_truth = ifft_truth.reshape(-1, ifft_truth.shape[-1] ** 2).max(axis=1)
-    peak_vals_pred = ifft_pred.reshape(-1, ifft_pred.shape[-1] ** 2).max(axis=1)
-    dr_truth = peak_vals_truth[rms_truth != 0] / rms_truth[rms_truth != 0]
-    dr_pred = peak_vals_pred[rms_pred != 0] / rms_pred[rms_pred != 0]
+
+    peak_truth = ifft_truth.reshape(len(ifft_truth), -1).max(axis=1)
+    peak_pred = ifft_pred.reshape(len(ifft_pred), -1).max(axis=1)
+
+    valid_truth = rms_truth != 0
+    valid_pred = rms_pred != 0
+    dr_truth = peak_truth[valid_truth] / rms_truth[valid_truth]
+    dr_pred = peak_pred[valid_pred] / rms_pred[valid_pred]
+
     return dr_truth, dr_pred, rms_boxes, corners
