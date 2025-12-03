@@ -47,12 +47,12 @@ def main(config_path, mode="train", premodel=None):
 
     if premodel:
         # if the premodel cli option is used, overwrite config path
-        train_config.paths.pre_model = premodel
+        train_config.paths.checkpoint = premodel
 
-    data_module = train_config.dataloader.datamodule(
+    data_module = train_config.dataloader.module(
         data_dir=train_config.paths.data_path,
-        batch_size=train_config.hypers.batch_size,
-        **train_config.dataloader.model_dump(exclude=["data_dir", "batch_size"]),
+        batch_size=train_config.training.batch_size,
+        **train_config.dataloader.model_dump(),
     )
 
     # Dumping train_config to a dict here results in nicer
@@ -64,23 +64,25 @@ def main(config_path, mode="train", premodel=None):
 
     # with rich_training_layout(train_config, callbacks) as layout_callbacks:
     trainer = L.Trainer(
-        limit_train_batches=data_module.train_length // train_config.hypers.batch_size
+        limit_train_batches=data_module.train_length // train_config.training.batch_size
         if data_module.train_length
-        else train_config.hypers.batch_size,
-        limit_val_batches=data_module.valid_length // train_config.hypers.batch_size
+        else train_config.training.batch_size,
+        limit_val_batches=data_module.valid_length // train_config.training.batch_size
         if data_module.valid_length
-        else train_config.hypers.batch_size,
-        limit_test_batches=data_module.test_length // train_config.hypers.batch_size
+        else train_config.training.batch_size,
+        limit_test_batches=data_module.test_length // train_config.training.batch_size
         if data_module.test_length
-        else train_config.hypers.batch_size,
-        max_epochs=train_config.general.num_epochs,
+        else train_config.training.batch_size,
+        max_epochs=train_config.training.num_epochs,
         callbacks=callbacks,
         logger=loggers,
-        log_every_n_steps=train_config.hypers.batch_size,
+        log_every_n_steps=train_config.training.batch_size,
         devices=train_config.devices.num_devices,
         accelerator=train_config.devices.accelerator,
         precision=train_config.devices.precision,
-        strategy=train_config.deepspeed if train_config.deepspeed else "auto",
+        strategy=train_config.devices.deepspeed
+        if train_config.devices.deepspeed
+        else "auto",
     )
 
     if mode.lower() == "train":
