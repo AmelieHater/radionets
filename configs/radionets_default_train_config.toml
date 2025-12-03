@@ -1,42 +1,77 @@
-# This is a TOML document.
+title = "Radionets Default Training Configuration"
 
-title = "Train configuration"
-
-[mode]
-quiet = true
-gpu = false
-
-[logging]
-comet_ml = true
-project_name = "VLA"
-plot_n_epochs = 2
-scale = true
-
+# ─────────────────────────────────────────────────────────────────────────────
+# PATHS & I/O
+# ─────────────────────────────────────────────────────────────────────────────
 [paths]
 data_path = "./example_data/"
 model_path = "./build/example_model/example.model"
-pre_model = "none"
+checkpoint = false
 
-[general]
+# ─────────────────────────────────────────────────────────────────────────────
+# MODEL & ARCHITECTURE
+# ─────────────────────────────────────────────────────────────────────────────
+[model]
+arch_name = "SRResNet18"
 fourier = true
 amp_phase = true
 normalize = false
-source_list = false
-arch_name = "filter_deep"
-loss_func = "splitted_L1"
-num_epochs = 5
-inspection = true
-output_format = "png"
-switch_loss = false
-when_switch = 25
 
-[hypers]
-batch_size = 100
-lr = 1e-3
+# ─────────────────────────────────────────────────────────────────────────────
+# TRAINING
+# ─────────────────────────────────────────────────────────────────────────────
+[training]
+num_epochs = 50
+batch_size = 16
 
-[param_scheduling]
-use = true
-lr_start = 7e-2
-lr_max = 3e-1
-lr_stop = 5e-2
-lr_ratio = 0.25
+[training.loss]
+loss_func = "MSELoss"
+
+[training.optimizer]
+optimizer = "AdamW"
+lr = 0.001
+
+[training.lr_scheduler]
+lr_start = 1e-5
+lr_max = 5e-3
+lr_stop = 1e-7
+warmup_ratio = 0.2
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ACCELERATORS & DATALOADING
+# ─────────────────────────────────────────────────────────────────────────────
+[devices]
+accelerator = "gpu"
+num_devices = "auto"
+precision = "32-true"
+deepspeed = "deepspeed_stage_2"
+
+[dataloader]
+module = "WebDatasetModule"
+num_workers = 10
+prefetch_factor = 2
+persistent_workers = false
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CALLBACKS
+# ─────────────────────────────────────────────────────────────────────────────
+[callbacks.checkpoint]
+every_n_epochs = 2
+save_top_k = -1
+
+[callbacks.batch_size_finder]
+mode = "binsearch"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# LOGGING
+# ─────────────────────────────────────────────────────────────────────────────
+[logging]
+project_name = "Radionets Experiment"
+plot_n_epochs = 1
+scale = true
+
+[logging.comet_ml]
+enabled = true
+
+[logging.codecarbon]
+log_level = "error"
