@@ -1,42 +1,10 @@
-import os
 from pathlib import Path
 
-import torch
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel
 
 __all__ = [
     "DeepSpeedConfig",
-    "DeviceConfig",
-    "CodeCarbonEmissionTrackerConfig",
 ]
-
-
-class DeviceConfig(BaseModel):
-    """Device configuration settings."""
-
-    accelerator: str = "auto"
-    num_devices: str | list | int = "auto"
-    precision: str | int = "32-true"
-
-    @model_validator(mode="after")
-    def check_device_count(self) -> None:
-        if self.accelerator in ["gpu", "tpu", "hpu"] and not torch.cuda.is_available():
-            raise ValueError(
-                f"'accelerator' is set to {self.accelerator} in the "
-                "configuration but CUDA is not available. Please "
-                "ensure CUDA is installed or set accelerator to 'cpu'."
-            )
-
-        if (
-            self.accelerator in ["gpu", "tpu", "hpu"]
-            and isinstance(self.num_devices, int) > torch.cuda.device_count()
-        ):
-            raise ValueError(
-                f"'num_devices' exceeds the number of available {self.accelerator}s "
-                f"({self.num_devices} > {torch.cuda.device_count})"
-            )
-
-        return self
 
 
 class DeepSpeedConfig(BaseModel):
@@ -82,11 +50,3 @@ class DeepSpeedConfig(BaseModel):
     synchronize_checkpoint_boundary: bool = False
     load_full_weights: bool = False
     exclude_frozen_parameters: bool = False
-
-
-class CodeCarbonEmissionTrackerConfig(BaseModel):
-    """Codecarbon emission tracker configuration"""
-
-    log_level: str | int = "error"
-    country_iso_code: str = "DEU"
-    output_dir: str | None = os.getcwd()
