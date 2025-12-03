@@ -1,12 +1,13 @@
 import os
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr, field_validator
 
 __all__ = [
     "CSVLoggerConfig",
     "CometLoggerConfig",
     "MLFlowLoggerConfig",
+    "CodeCarbonEmissionTrackerConfig",
 ]
 
 
@@ -22,12 +23,19 @@ class CSVLoggerConfig(BaseModel):
 class CometLoggerConfig(BaseModel):
     """Lightning CometLogger logging config"""
 
-    api_key: str | None = os.getenv("COMET_API_KEY")
+    api_key: SecretStr = SecretStr(os.getenv("COMET_API_KEY"))
     workspace: str | None = None
     experiment_key: str | None = None
     mode: Literal["get_or_create", "get", "create"] | None = None
     online: bool | None = None
     prefix: str | None = None
+
+    @field_validator("api_key", mode="before")
+    @classmethod
+    def validate_api_key(cls, key: SecretStr | None) -> SecretStr | None:
+        key = SecretStr(key) if key else None
+
+        return key
 
 
 class MLFlowLoggerConfig(BaseModel):
@@ -42,3 +50,11 @@ class MLFlowLoggerConfig(BaseModel):
     artifact_location: str | None = None
     run_id: str | None = None
     synchronous: bool | None = None
+
+
+class CodeCarbonEmissionTrackerConfig(BaseModel):
+    """Codecarbon emission tracker configuration"""
+
+    log_level: str | int = "error"
+    country_iso_code: str = "DEU"
+    output_dir: str | None = os.getcwd()
