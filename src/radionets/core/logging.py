@@ -36,7 +36,8 @@ class Loggers:
 
             comet_logger = CometLogger(
                 project=train_config.logging.project_name,
-                **train_config.logging.comet_ml.model_dump(),
+                api_key=train_config.logging.comet_ml.api_key.get_secret_value(),
+                **train_config.logging.comet_ml.model_dump(exclude="api_key"),
             )
             loggers.append(comet_logger)
 

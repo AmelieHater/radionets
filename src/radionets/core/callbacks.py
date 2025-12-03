@@ -65,7 +65,7 @@ class CometCallback(LightningCallback):
     def __init__(self, train_config, *args, **kwargs):
         super().__init__()
         self.train_config = train_config
-        self.amp_phase = train_config.general.amp_phase
+        self.amp_phase = train_config.model.amp_phase
         self.scale = train_config.logging.scale
 
         self.experiment = None
