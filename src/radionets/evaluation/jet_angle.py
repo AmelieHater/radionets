@@ -57,23 +57,25 @@ def _im2array_value(
     return x_coords, y_coords, value
 
 
-def pca(image):
-    """Compute the major components of an image. The Image is treated as a
-    distribution.
+def pca(
+    image: torch.Tensor,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Compute the major components of an image. The image is treated
+    as a 2D distribution.
 
     Parameters
     ----------
-    image : Image or 2DArray (N, M)
-        Image to be used as distribution
+    image : :class:`~torch.Tensor`, shape (B, H, W)
+        Images to be used as distribution
 
     Returns
     -------
-    cog_x :
+    cog_x : :class:`~torch.Tensor`, shape (B, 1)
         X-position of the distributions center of gravity
-    cog_y :
+    cog_y : :class:`~torch.Tensor`, shape (B, 1)
         Y-position of the distributions center of gravity
-    psi :
-        Angle between first mjor component and x-axis
+    psi : :class:`~torch.Tensor`, shape (B,)
+        Angle between first major component and x-axis
     """
     pix_x, pix_y, image = _im2array_value(image)
 
@@ -97,23 +99,25 @@ def pca(image):
     return cog_x, cog_y, psi_torch
 
 
-def calc_jet_angle(image):
-    """Caluclate the jet angle from an image created with gaussian sources. This
-    is achieved by a PCA.
+def calc_jet_angle(
+    image: torch.Tensor,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Calculate the jet angle from an image consisting of
+    (approx.) gaussian sources using a PCA.
 
     Parameters
     ----------
-    image : ndarray
-        input image
+    image : :class:`~torch.Tensor`, shape (B, H, W)
+        Input images
 
     Returns
     -------
-    float
-        slope of the line
-    float
-        intercept of the line
-    float
-        angle between the horizontal axis and the jet axis
+    m : :class:`~torch.Tensor`, shape (B,)
+        Slope of the line
+    n : :class:`~torch.Tensor`, shape (B,)
+        Intercept of the line
+    alpha : :class:`~torch.Tensor`, shape (B,)
+        Angle between the horizontal axis and the jet axis
     """
     if not isinstance(image, torch.Tensor):
         image = torch.as_tensor(image)
