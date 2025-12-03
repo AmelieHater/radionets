@@ -10,8 +10,10 @@ except ImportError:
 
 @contextmanager
 def carbontracker(train_config):
-    if _CODECARBON_AVAILABLE and train_config.codecarbon:
-        tracker = OfflineEmissionsTracker(**train_config.codecarbon.model_dump())
+    if _CODECARBON_AVAILABLE and train_config.logging.codecarbon:
+        tracker = OfflineEmissionsTracker(
+            **train_config.logging.codecarbon.model_dump()
+        )
         try:
             yield tracker.start()
         finally:

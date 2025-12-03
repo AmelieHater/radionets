@@ -7,9 +7,9 @@ class TrainModule(LightningModule):
         self.save_hyperparameters()
 
         self.train_config = train_config
-        self.model = train_config["general"]["arch_name"]()
-        self.optimizer = train_config["general"]["optimizer"]
-        self.loss_fn = train_config["general"]["loss_func"]()
+        self.model = train_config["model"]["arch_name"]()
+        self.optimizer = train_config["training"]["optimizer"]["optimizer"]
+        self.loss_fn = train_config["training"]["loss"]["loss_func"]()
 
     def forward(self, inputs):
         return self.model(inputs)
@@ -63,7 +63,7 @@ class TrainModule(LightningModule):
     def configure_optimizers(self):
         optimizer = self.optimizer(
             self.parameters(),
-            lr=self.train_config["hypers"]["lr"],
+            lr=self.train_config["training"]["optimizer"]["lr"],
         )
 
         return optimizer
