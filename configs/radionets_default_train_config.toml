@@ -69,9 +69,4 @@ mode = "binsearch"
 project_name = "Radionets Experiment"
 plot_n_epochs = 1
 scale = true
-
-[logging.comet_ml]
-enabled = true
-
-[logging.codecarbon]
-log_level = "error"
+comet_ml = true
