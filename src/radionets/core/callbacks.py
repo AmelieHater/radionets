@@ -1,3 +1,5 @@
+from abc import ABC
+
 import lightning as L
 import matplotlib.pyplot as plt
 from lightning.pytorch.callbacks import (
@@ -10,7 +12,7 @@ from lightning.pytorch.callbacks import (
     Timer,
 )
 from lightning.pytorch.callbacks import Callback as LightningCallback
-from lightning.pytorch.loggers import CometLogger
+from lightning.pytorch.loggers import CometLogger, MLFlowLogger
 from matplotlib.colors import PowerNorm
 from pydantic import BaseModel
 
@@ -58,55 +60,56 @@ class Callbacks:
         if train_config.logging.comet_ml:
             callbacks.append(CometCallback(train_config))
 
+        if train_config.logging.mlflow:
+            callbacks.append(MLFlowCallback(train_config))
+
         return callbacks
 
 
-class CometCallback(LightningCallback):
+class PlottingCallbackABC(ABC, LightningCallback):
     def __init__(self, train_config, *args, **kwargs):
         super().__init__()
         self.train_config = train_config
         self.amp_phase = train_config.model.amp_phase
         self.scale = train_config.logging.scale
 
-        self.experiment = None
         self.cached_batch = None
 
         data_types = ["Amplitude", "Phase"] if self.amp_phase else ["Real", "Imaginary"]
-
         results = [" Prediction", " Ground Truth"]
         self.pred_plot_titles = [t + r for r in results for t in data_types]
 
     def plot_val_pred(self, predictions, targets, current_epoch: int):
-        fig, axs = plt.subplots(
+        self.fig, self.axs = plt.subplots(
             2, 2, figsize=(12, 8.5), layout="constrained", sharex=True, sharey=True
         )
-        axs = axs.flatten()
+        self.axs = self.axs.flatten()
 
         limits_0 = get_vmin_vmax(targets[0, 0])  # Limits for amp/real
         limits_1 = get_vmin_vmax(targets[0, 1])  # Limits for phase/imaginary
 
-        im0 = axs[0].imshow(
+        im0 = self.axs[0].imshow(
             predictions[0, 0],
             cmap="radionets.PuOr",
             vmin=-limits_0,
             vmax=limits_0,
             origin="lower",
         )
-        im1 = axs[1].imshow(
+        im1 = self.axs[1].imshow(
             predictions[0, 1],
             cmap="radionets.PuOr",
             vmin=-limits_1,
             vmax=limits_1,
             origin="lower",
         )
-        im2 = axs[2].imshow(
+        im2 = self.axs[2].imshow(
             targets[0, 0],
             cmap="radionets.PuOr",
             vmin=-limits_0,
             vmax=limits_0,
             origin="lower",
         )
-        im3 = axs[3].imshow(
+        im3 = self.axs[3].imshow(
             targets[0, 1],
             cmap="radionets.PuOr",
             vmin=-limits_1,
@@ -115,21 +118,15 @@ class CometCallback(LightningCallback):
         )
 
         for ax, im, title in zip(
-            axs,
+            self.axs,
             [im0, im1, im2, im3],
             self.pred_plot_titles,
         ):
-            set_cbar(fig, ax, im, title=title, phase="Phase" in title)
+            set_cbar(self.fig, ax, im, title=title, phase="Phase" in title)
 
-        axs[0].set(ylabel="Frequels")
-        axs[2].set(xlabel="Frequels", ylabel="Frequels")
-        axs[3].set(xlabel="Frequels")
-
-        self.experiment.log_figure(
-            figure=fig, figure_name=f"fourier_pred_{current_epoch}"
-        )
-
-        plt.close(fig)
+        self.axs[0].set(ylabel="Frequels")
+        self.axs[2].set(xlabel="Frequels", ylabel="Frequels")
+        self.axs[3].set(xlabel="Frequels")
 
     def plot_val_fft(self, predictions, targets, current_epoch):
         ifft_pred = get_ifft(
@@ -139,15 +136,15 @@ class CometCallback(LightningCallback):
         )
         ifft_truth = get_ifft(targets, amp_phase=self.amp_phase, scale=self.scale)
 
-        fig, axs = plt.subplots(1, 3, figsize=(16, 4.5), layout="constrained")
+        self.fig, self.axs = plt.subplots(1, 3, figsize=(16, 4.5), layout="constrained")
 
-        im0 = axs[0].imshow(
+        im0 = self.axs[0].imshow(
             ifft_pred,
             norm=PowerNorm(0.25, vmax=ifft_truth.max()),
             cmap="inferno",
             origin="lower",
         )
-        im1 = axs[1].imshow(
+        im1 = self.axs[1].imshow(
             ifft_truth,
             norm=PowerNorm(0.25),
             cmap="inferno",
@@ -155,7 +152,7 @@ class CometCallback(LightningCallback):
         )
 
         limits = get_vmin_vmax(ifft_pred - ifft_truth)
-        im2 = axs[2].imshow(
+        im2 = self.axs[2].imshow(
             ifft_pred - ifft_truth,
             cmap="radionets.PuOr",
             vmin=-limits,
@@ -164,21 +161,18 @@ class CometCallback(LightningCallback):
         )
 
         for ax, im, title in zip(
-            axs,
+            self.axs,
             [im0, im1, im2],
             ["Prediction", "Truth", "Difference"],
         ):
-            set_cbar(fig, ax, im, title="FFT " + title)
+            set_cbar(self.fig, ax, im, title="FFT " + title)
 
-        axs[0].set(
+        self.axs[0].set(
             ylabel="Pixels",
             xlabel="Pixels",
         )
-        axs[1].set_xlabel("Pixels")
-        axs[2].set_xlabel("Pixels")
-
-        self.experiment.log_figure(figure=fig, figure_name=f"fft_pred_{current_epoch}")
-        plt.close(fig)
+        self.axs[1].set_xlabel("Pixels")
+        self.axs[2].set_xlabel("Pixels")
 
     def on_validation_epoch_end(self, trainer: L.Trainer, pl_module) -> None:
         """Log predictions at validation epoch end."""
@@ -192,18 +186,6 @@ class CometCallback(LightningCallback):
                 batch[0][0][None, ...].cpu(),
                 batch[1][0][None, ...].cpu(),
             )
-
-        if self.experiment is None:
-            try:
-                self.experiment = next(
-                    logger.experiment
-                    for logger in trainer.loggers
-                    if isinstance(logger, CometLogger)
-                )
-            except StopIteration as e:
-                raise ValueError(
-                    f"Could not find a CometLogger instance in {trainer.loggers}."
-                ) from e
 
         if (trainer.current_epoch + 1) % self.train_config.logging.plot_n_epochs == 0:
             batch = (
@@ -230,3 +212,99 @@ class CometCallback(LightningCallback):
                 targets,
                 current_epoch=trainer.current_epoch,
             )
+
+
+class CometCallback(PlottingCallbackABC):
+    def __init__(self, train_config, *args, **kwargs):
+        super().__init__(train_config, *args, **kwargs)
+        self.experiment = None
+
+    def plot_val_pred(self, predictions, targets, current_epoch: int) -> None:
+        super().plot_val_pred(predictions, targets, current_epoch)
+
+        self.experiment.log_figure(
+            figure=self.fig,
+            figure_name=f"fourier_pred_{current_epoch}",
+        )
+
+        plt.close(self.fig)
+
+    def plot_val_fft(self, predictions, targets, current_epoch: int) -> None:
+        super().plot_val_fft(predictions, targets, current_epoch)
+
+        self.experiment.log_figure(
+            figure=self.fig,
+            figure_name=f"fft_pred_{current_epoch}",
+        )
+        plt.close(self.fig)
+
+    def on_validation_epoch_end(self, trainer: L.Trainer, pl_module) -> None:
+        """Log predictions at validation epoch end."""
+        if self.experiment is None:
+            try:
+                self.experiment = next(
+                    logger.experiment
+                    for logger in trainer.loggers
+                    if isinstance(logger, CometLogger)
+                )
+            except StopIteration as e:
+                raise ValueError(
+                    f"Could not find a CometLogger instance in {trainer.loggers}."
+                ) from e
+
+        super().on_validation_epoch_end(trainer, pl_module)
+
+
+class MLFlowCallback(PlottingCallbackABC):
+    def __init__(self, train_config, *args, **kwargs):
+        super().__init__(train_config, *args, **kwargs)
+
+        self.experiment = None
+
+    def plot_val_pred(self, predictions, targets, current_epoch: int) -> None:
+        super().plot_val_pred(predictions, targets, current_epoch)
+
+        artifact_file = str(self.base_dir) + f"/fourier_pred_{current_epoch:0>4}.png"
+
+        self.experiment.log_figure(
+            figure=self.fig,
+            artifact_file=artifact_file,
+            run_id=self.logger._run_id,
+        )
+
+        plt.close(self.fig)
+
+    def plot_val_fft(self, predictions, targets, current_epoch: int) -> None:
+        super().plot_val_fft(predictions, targets, current_epoch)
+
+        artifact_file = str(self.base_dir) + f"/fft_pred_{current_epoch:0>4}.png"
+
+        self.experiment.log_figure(
+            figure=self.fig,
+            artifact_file=artifact_file,
+            run_id=self.logger._run_id,
+        )
+        plt.close(self.fig)
+
+    def on_validation_epoch_end(self, trainer: L.Trainer, pl_module) -> None:
+        """Log predictions at validation epoch end."""
+        if self.experiment is None:
+            try:
+                self.logger = next(
+                    logger
+                    for logger in trainer.loggers
+                    if isinstance(logger, MLFlowLogger)
+                )
+                self.experiment = self.logger.experiment
+
+                self.base_dir = (
+                    self.train_config.paths.model_path / f"mlflow/{self.logger._run_id}"
+                )
+                self.base_dir.mkdir(parents=True)
+
+            except StopIteration as e:
+                raise ValueError(
+                    f"Could not find a MLFlowLogger instance in {trainer.loggers}."
+                ) from e
+
+        super().on_validation_epoch_end(trainer, pl_module)
