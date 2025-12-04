@@ -43,7 +43,7 @@ class Loggers:
 
         if train_config.logging.mlflow:
             try:
-                from lightning.pytorch.loggers import MLflowLogger
+                from lightning.pytorch.loggers import MLFlowLogger
             except ImportError as e:
                 raise ModuleNotFoundError(
                     "'mlflow' was set to 'true' in your training config but "
@@ -52,7 +52,7 @@ class Loggers:
                     "You can install it using 'uv pip install mlflow'."
                 ) from e
 
-            mlflow_logger = MLflowLogger(
+            mlflow_logger = MLFlowLogger(
                 experiment_name=train_config.logging.project_name,
                 save_dir=train_config.paths.model_path,
                 **train_config.logging.mlflow.model_dump(),
