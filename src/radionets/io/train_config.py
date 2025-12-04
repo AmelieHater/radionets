@@ -32,7 +32,7 @@ class PathsConfig(BaseModel):
     """File paths configuration."""
 
     data_path: Path = Path("./example_data/")
-    model_path: Path = Path("./build/example_model/example.model")
+    model_path: Path = Path("./build/example_model/")
     checkpoint: Path | None | Literal[False] = None
 
     @field_validator("data_path", "model_path", "checkpoint")

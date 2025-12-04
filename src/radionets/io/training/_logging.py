@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, SecretStr, field_validator
@@ -41,8 +42,8 @@ class CometLoggerConfig(BaseModel):
 class MLFlowLoggerConfig(BaseModel):
     """Lightning MLFlowLogger logging config"""
 
-    run_name: str | None = (None,)
-    tracking_uri: str | None = os.getenv("MLFLOW_TRACKING_URI")
+    run_name: str | None = None
+    tracking_uri: str | None = "http://127.0.0.1:5000"
     tags: dict | None = None
     log_model: Literal[True, False, "all"] = False
     checkpoint_path_prefix: str = ""
@@ -57,4 +58,19 @@ class CodeCarbonEmissionTrackerConfig(BaseModel):
 
     log_level: str | int = "error"
     country_iso_code: str = "DEU"
-    output_dir: str | None = os.getcwd()
+    output_dir: str | None = None
+
+    @field_validator("output_dir", mode="after")
+    @classmethod
+    def expand_path(cls, v: str | Path) -> str:
+        """Expand and resolve paths."""
+
+        if not isinstance(v, Path):
+            v = Path(v)
+
+        if v in {None, False}:
+            v = os.getcwd()
+        else:
+            v.expanduser().resolve()
+
+        return str(v)
