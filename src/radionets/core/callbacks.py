@@ -2,6 +2,7 @@ from abc import ABC
 
 import lightning as L
 import matplotlib.pyplot as plt
+import pandas as pd
 from lightning.pytorch.callbacks import (
     BatchSizeFinder,
     DeviceStatsMonitor,
@@ -62,6 +63,9 @@ class Callbacks:
 
         if train_config.logging.mlflow:
             callbacks.append(MLFlowCallback(train_config))
+
+            if train_config.logging.codecarbon:
+                callbacks.append(MLFlowCodeCarbonCallback(train_config))
 
         return callbacks
 
@@ -308,3 +312,46 @@ class MLFlowCallback(PlottingCallbackABC):
                 ) from e
 
         super().on_validation_epoch_end(trainer, pl_module)
+
+
+class MLFlowCodeCarbonCallback(LightningCallback):
+    def __init__(self, train_config, *args, **kwargs):
+        self.train_config = train_config
+
+        self.experiment = None
+
+    def on_fit_end(self, trainer, pl_module):
+        if self.experiment is None:
+            try:
+                self.logger = next(
+                    logger
+                    for logger in trainer.loggers
+                    if isinstance(logger, MLFlowLogger)
+                )
+                self.experiment = self.logger.experiment
+
+            except StopIteration as e:
+                raise ValueError(
+                    f"Could not find a MLFlowLogger instance in {trainer.loggers}."
+                ) from e
+
+        emission_data = pd.read_csv(
+            self.train_config.logging.codecarbon.output_dir + "/emissions.csv"
+        ).to_dict()
+
+        eval_res = dict(
+            running_time_total=emission_data["duration"][0],
+            running_time=emission_data["duration"][0],
+            power_draw_total=emission_data["energy_consumed"][0] * 3.6e6,
+            power_draw=emission_data["energy_consumed"][0] * 3.6e6,
+        )
+
+        for key, val in eval_res.items():
+            self.experiment.log_metric(
+                key=key,
+                value=val,
+                run_id=self.logger._run_id,
+            )
+
+    def on_test_end(): ...
+    def on_predict_end(): ...
