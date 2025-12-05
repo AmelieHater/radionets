@@ -1,4 +1,6 @@
+import warnings
 from abc import ABC
+from pathlib import Path
 
 import lightning as L
 import matplotlib.pyplot as plt
@@ -322,22 +324,54 @@ class MLFlowCodeCarbonCallback(LightningCallback):
 
     def on_fit_end(self, trainer, pl_module):
         if self.experiment is None:
-            try:
-                self.logger = next(
-                    logger
-                    for logger in trainer.loggers
-                    if isinstance(logger, MLFlowLogger)
-                )
-                self.experiment = self.logger.experiment
+            self._set_up_experiment(trainer)
 
-            except StopIteration as e:
-                raise ValueError(
-                    f"Could not find a MLFlowLogger instance in {trainer.loggers}."
-                ) from e
+        try:
+            self._log_metrics()
+        except FileNotFoundError as e:
+            warnings.warn(f"{e}. No emissions were logged.", stacklevel=2)
+        except KeyError as e:
+            warnings.warn(f"{e}. No emissions were logged.", stacklevel=2)
 
-        emission_data = pd.read_csv(
+    def on_test_end(self, trainer, pl_module):
+        if self.experiment is None:
+            self._set_up_experiment(trainer)
+
+        try:
+            self._log_metrics()
+        except FileNotFoundError as e:
+            warnings.warn(f"{e}. No emissions were logged.", stacklevel=2)
+        except KeyError as e:
+            warnings.warn(f"{e}. No emissions were logged.", stacklevel=2)
+
+    def on_predict_end(self, trainer, pl_module):
+        if self.experiment is None:
+            self._set_up_experiment(trainer)
+
+        try:
+            self._log_metrics()
+        except FileNotFoundError as e:
+            warnings.warn(f"{e}. No emissions were logged.", stacklevel=2)
+        except KeyError as e:
+            warnings.warn(f"{e}. No emissions were logged.", stacklevel=2)
+
+    def _set_up_experiment(self, trainer):
+        try:
+            self.logger = next(
+                logger for logger in trainer.loggers if isinstance(logger, MLFlowLogger)
+            )
+            self.experiment = self.logger.experiment
+
+        except StopIteration as e:
+            raise ValueError(
+                f"Could not find a MLFlowLogger instance in {trainer.loggers}."
+            ) from e
+
+    def _log_metrics(self):
+        emission_file = Path(
             self.train_config.logging.codecarbon.output_dir + "/emissions.csv"
-        ).to_dict()
+        )
+        emission_data = pd.read_csv(emission_file).to_dict()
 
         eval_res = dict(
             running_time_total=emission_data["duration"][0],
@@ -353,5 +387,8 @@ class MLFlowCodeCarbonCallback(LightningCallback):
                 run_id=self.logger._run_id,
             )
 
-    def on_test_end(): ...
-    def on_predict_end(): ...
+        # Remove file after logging all important metrics to mlflow.
+        # This prevents codecarbon from creating 'emissions.csv_%d.bak'
+        # files in the save directory
+        if emission_file.is_file():
+            emission_file.unlink()
