@@ -9,7 +9,7 @@ from radionets.core.logging import Loggers
 from radionets.io import TrainConfig
 from radionets.training import TrainModule
 from radionets.utils._paths import _validate_pre_model_path
-from radionets.utils.codecarbon import carbontracker
+from radionets.utils.carbon_tracking import carbontracker
 
 
 @click.command()
