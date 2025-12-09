@@ -1,6 +1,6 @@
+import pytest
 import torch
 import torch.nn as nn
-import pytest
 
 from radionets.architecture.layers import LocallyConnected2d
 
@@ -18,7 +18,7 @@ class TestLocallyConnected2d:
             output_size=(8, 8),
             kernel_size=3,
             stride=1,
-            bias=False
+            bias=False,
         )
 
         # Check weight shape
@@ -40,7 +40,7 @@ class TestLocallyConnected2d:
             output_size=(8, 8),
             kernel_size=3,
             stride=1,
-            bias=True
+            bias=True,
         )
 
         # Check bias shape
@@ -56,7 +56,7 @@ class TestLocallyConnected2d:
             output_size=(8, 8),
             kernel_size=3,
             stride=1,
-            bias=False
+            bias=False,
         )
 
         # Input that should produce 8x8 output with kernel_size=3, stride=1
@@ -76,7 +76,7 @@ class TestLocallyConnected2d:
             output_size=(8, 8),
             kernel_size=3,
             stride=1,
-            bias=True
+            bias=True,
         )
 
         input_tensor = torch.randn(2, 3, 10, 10)
@@ -93,7 +93,7 @@ class TestLocallyConnected2d:
             output_size=(4, 4),
             kernel_size=3,
             stride=2,
-            bias=False
+            bias=False,
         )
 
         # Input size: 10x10 -> (10-3+1)/2 = 4x4
@@ -111,7 +111,7 @@ class TestLocallyConnected2d:
             output_size=(6, 6),
             kernel_size=2,
             stride=1,
-            bias=False
+            bias=False,
         )
 
         # Input size: 7x7 -> (7-2+1)/1 = 6x6
@@ -129,7 +129,7 @@ class TestLocallyConnected2d:
             output_size=(5, 5),
             kernel_size=2,
             stride=1,
-            bias=True
+            bias=True,
         )
 
         input_tensor = torch.randn(1, 2, 6, 6, requires_grad=True)
@@ -157,7 +157,7 @@ class TestLocallyConnected2d:
             output_size=(3, 3),
             kernel_size=3,
             stride=1,
-            bias=False
+            bias=False,
         )
 
         # Test different batch sizes
@@ -175,7 +175,7 @@ class TestLocallyConnected2d:
             output_size=(3, 3),
             kernel_size=2,
             stride=1,
-            bias=True
+            bias=True,
         )
 
         input_tensor = torch.randn(1, 2, 4, 4)
@@ -195,7 +195,7 @@ class TestLocallyConnected2d:
             output_size=(8, 8),
             kernel_size=3,
             stride=1,
-            bias=True
+            bias=True,
         )
 
         # Check that weights are not all zeros or all the same
@@ -217,7 +217,7 @@ class TestLocallyConnected2d:
             output_size=(1, 1),
             kernel_size=5,
             stride=1,
-            bias=False
+            bias=False,
         )
 
         # Input size: 5x5 -> (5-5+1)/1 = 1x1
@@ -231,13 +231,18 @@ class TestLocallyConnected2d:
         expected_weight_shape = (1, 2, 1, 1, 1, 25)
         assert layer.weight.shape == expected_weight_shape
 
-    @pytest.mark.parametrize("in_channels,out_channels,kernel_size,stride", [
-        (1, 1, 2, 1),
-        (3, 8, 3, 1),
-        (16, 32, 2, 2),
-        (8, 16, 4, 2),
-    ])
-    def test_parametrized_configurations(self, in_channels, out_channels, kernel_size, stride):
+    @pytest.mark.parametrize(
+        "in_channels,out_channels,kernel_size,stride",
+        [
+            (1, 1, 2, 1),
+            (3, 8, 3, 1),
+            (16, 32, 2, 2),
+            (8, 16, 4, 2),
+        ],
+    )
+    def test_parametrized_configurations(
+        self, in_channels, out_channels, kernel_size, stride
+    ):
         """Test various parameter combinations."""
         # Calculate expected output size for a 10x10 input
         output_h = (10 - kernel_size) // stride + 1
@@ -250,7 +255,7 @@ class TestLocallyConnected2d:
             output_size=output_size,
             kernel_size=kernel_size,
             stride=stride,
-            bias=True
+            bias=True,
         )
 
         input_tensor = torch.randn(2, in_channels, 10, 10)
@@ -271,7 +276,7 @@ def test_edge_cases():
             output_size=(1, 1),
             kernel_size=3,
             stride=1,
-            bias=False
+            bias=False,
         )
 
         # Minimum input size for 3x3 kernel to produce 1x1 output
@@ -281,7 +286,6 @@ def test_edge_cases():
         assert output.shape == (1, 1, 1, 1)
 
 
-import numpy as np
 from radionets.architecture.layers import ComplexConv2d
 
 
@@ -385,11 +389,7 @@ class TestComplexConv2d:
     def test_forward_output_calculation(self):
         """Test that forward pass calculates complex convolution correctly."""
         conv = ComplexConv2d(
-            in_channels=2,
-            out_channels=2,
-            kernel_size=3,
-            stride=1,
-            bias=False
+            in_channels=2, out_channels=2, kernel_size=3, stride=1, bias=False
         )
 
         # Create simple input
@@ -445,11 +445,7 @@ class TestComplexConv2d:
     def test_chunk_operation(self):
         """Test the chunk operation in forward method."""
         conv = ComplexConv2d(
-            in_channels=4,
-            out_channels=8,
-            kernel_size=3,
-            stride=1,
-            bias=True
+            in_channels=4, out_channels=8, kernel_size=3, stride=1, bias=True
         )
 
         # Create input
@@ -466,11 +462,7 @@ class TestComplexConv2d:
     def test_gradient_flow(self):
         """Test that gradients flow properly through the network."""
         conv = ComplexConv2d(
-            in_channels=2,
-            out_channels=4,
-            kernel_size=3,
-            stride=1,
-            bias=True
+            in_channels=2, out_channels=4, kernel_size=3, stride=1, bias=True
         )
 
         # Create input that requires grad
@@ -497,33 +489,25 @@ class TestComplexConv2d:
     def test_device_compatibility(self):
         """Test that the module works on different devices."""
         conv = ComplexConv2d(
-            in_channels=2,
-            out_channels=16,
-            kernel_size=3,
-            stride=1,
-            bias=True
+            in_channels=2, out_channels=16, kernel_size=3, stride=1, bias=True
         )
 
         # Test on CPU
         x_cpu = torch.randn(1, 2, 16, 16, dtype=torch.float32)
         output_cpu = conv.forward(x_cpu)
-        assert output_cpu.device.type == 'cpu'
+        assert output_cpu.device.type == "cpu"
 
         # Test on GPU if available
         if torch.cuda.is_available():
             conv_gpu = conv.cuda()
             x_gpu = x_cpu.cuda()
             output_gpu = conv_gpu.forward(x_gpu)
-            assert output_gpu.device.type == 'cuda'
+            assert output_gpu.device.type == "cuda"
 
     def test_module_inheritance(self):
         """Test that ComplexConv2d properly inherits from nn.Module."""
         conv = ComplexConv2d(
-            in_channels=2,
-            out_channels=2,
-            kernel_size=3,
-            stride=1,
-            bias=True
+            in_channels=2, out_channels=2, kernel_size=3, stride=1, bias=True
         )
 
         assert isinstance(conv, nn.Module)
@@ -531,7 +515,7 @@ class TestComplexConv2d:
         # Test that it can be added to a sequential model
         model = nn.Sequential(
             conv,
-            nn.ReLU()  # Note: ReLU won't work with complex numbers in practice
+            nn.ReLU(),  # Note: ReLU won't work with complex numbers in practice
         )
 
         assert len(list(model.parameters())) > 0
@@ -544,7 +528,7 @@ class TestComplexConv2d:
             out_channels=out_channels,
             kernel_size=kernel_size,
             stride=1,
-            bias=True
+            bias=True,
         )
 
         # Count parameters
@@ -552,7 +536,9 @@ class TestComplexConv2d:
 
         # Expected: 2 conv layers, each with weight and bias and
         # half input and output channels
-        expected_weight_params = 2 * out_channels // 2 * in_channels // 2 * kernel_size * kernel_size
+        expected_weight_params = (
+            2 * out_channels // 2 * in_channels // 2 * kernel_size * kernel_size
+        )
         expected_bias_params = 2 * out_channels // 2
         expected_total = expected_weight_params + expected_bias_params
 
@@ -565,11 +551,7 @@ class TestComplexConv2dEdgeCases:
     def test_zero_input(self):
         """Test with zero input."""
         conv = ComplexConv2d(
-            in_channels=2,
-            out_channels=2,
-            kernel_size=3,
-            stride=1,
-            bias=False
+            in_channels=2, out_channels=2, kernel_size=3, stride=1, bias=False
         )
 
         x_zero = torch.zeros(1, 2, 8, 8, dtype=torch.float32)
@@ -582,11 +564,7 @@ class TestComplexConv2dEdgeCases:
     def test_single_pixel_input(self):
         """Test with single pixel input."""
         conv = ComplexConv2d(
-            in_channels=2,
-            out_channels=2,
-            kernel_size=1,
-            stride=1,
-            bias=True
+            in_channels=2, out_channels=2, kernel_size=1, stride=1, bias=True
         )
 
         x_single = torch.randn(1, 2, 1, 1, dtype=torch.float32)
@@ -597,11 +575,7 @@ class TestComplexConv2dEdgeCases:
     def test_large_kernel_size(self):
         """Test with kernel size larger than input."""
         conv = ComplexConv2d(
-            in_channels=2,
-            out_channels=2,
-            kernel_size=5,
-            stride=1,
-            bias=True
+            in_channels=2, out_channels=2, kernel_size=5, stride=1, bias=True
         )
 
         # Input smaller than kernel
@@ -628,10 +602,10 @@ class TestComplexInstanceNorm2d:
         assert norm.affine == True
 
         # Check learnable parameters exist
-        assert hasattr(norm, 'weight_real')
-        assert hasattr(norm, 'weight_imag')
-        assert hasattr(norm, 'bias_real')
-        assert hasattr(norm, 'bias_imag')
+        assert hasattr(norm, "weight_real")
+        assert hasattr(norm, "weight_imag")
+        assert hasattr(norm, "bias_real")
+        assert hasattr(norm, "bias_imag")
 
         # Check parameter shapes
         assert norm.weight_real.shape == (32,)
@@ -654,10 +628,10 @@ class TestComplexInstanceNorm2d:
         assert norm.affine == False
 
         # Check that affine parameters don't exist
-        assert not hasattr(norm, 'weight_real')
-        assert not hasattr(norm, 'weight_imag')
-        assert not hasattr(norm, 'bias_real')
-        assert not hasattr(norm, 'bias_imag')
+        assert not hasattr(norm, "weight_real")
+        assert not hasattr(norm, "weight_imag")
+        assert not hasattr(norm, "bias_real")
+        assert not hasattr(norm, "bias_imag")
 
     def test_init_different_parameters(self):
         """Test initialization with different parameter combinations."""
@@ -755,9 +729,9 @@ class TestComplexInstanceNorm2d:
 
         # Test different input sizes
         input_sizes = [
-            (1, 64, 1, 1),      # Single pixel
-            (1, 64, 8, 8),      # Small image
-            (4, 64, 32, 32),    # Medium batch and image
+            (1, 64, 1, 1),  # Single pixel
+            (1, 64, 8, 8),  # Small image
+            (4, 64, 32, 32),  # Medium batch and image
             (2, 64, 128, 256),  # Large image
         ]
 
@@ -773,8 +747,12 @@ class TestComplexInstanceNorm2d:
                 real_means = real_out.mean(dim=[2, 3])
                 imag_means = imag_out.mean(dim=[2, 3])
 
-                assert torch.allclose(real_means, torch.zeros_like(real_means), atol=1e-4)
-                assert torch.allclose(imag_means, torch.zeros_like(imag_means), atol=1e-4)
+                assert torch.allclose(
+                    real_means, torch.zeros_like(real_means), atol=1e-4
+                )
+                assert torch.allclose(
+                    imag_means, torch.zeros_like(imag_means), atol=1e-4
+                )
 
     def test_chunk_operation(self):
         """Test the chunk operation in forward method."""
@@ -821,7 +799,9 @@ class TestComplexInstanceNorm2d:
 
         # Check that gradients are non-zero (indicating proper flow)
         assert not torch.allclose(x.grad, torch.zeros_like(x.grad))
-        assert not torch.allclose(norm.weight_real.grad, torch.zeros_like(norm.weight_real.grad))
+        assert not torch.allclose(
+            norm.weight_real.grad, torch.zeros_like(norm.weight_real.grad)
+        )
 
     def test_device_compatibility(self):
         """Test that the module works on different devices."""
@@ -830,14 +810,14 @@ class TestComplexInstanceNorm2d:
         # Test on CPU
         x_cpu = torch.randn(1, 16, 8, 8)
         output_cpu = norm.forward(x_cpu)
-        assert output_cpu.device.type == 'cpu'
+        assert output_cpu.device.type == "cpu"
 
         # Test on GPU if available
         if torch.cuda.is_available():
             norm_gpu = norm.cuda()
             x_gpu = x_cpu.cuda()
             output_gpu = norm_gpu.forward(x_gpu)
-            assert output_gpu.device.type == 'cuda'
+            assert output_gpu.device.type == "cuda"
 
             # Results should be similar (allowing for minor numerical differences)
             assert torch.allclose(output_cpu, output_gpu.cpu(), atol=1e-5)
@@ -849,10 +829,7 @@ class TestComplexInstanceNorm2d:
         assert isinstance(norm, nn.Module)
 
         # Test that it can be added to a sequential model
-        model = nn.Sequential(
-            norm,
-            nn.ReLU()
-        )
+        model = nn.Sequential(norm, nn.ReLU())
 
         # Test parameter counting
         params = list(norm.parameters())
@@ -963,8 +940,8 @@ class TestComplexPReLU:
         assert prelu.num_parameters == 1
 
         # Check learnable parameters exist
-        assert hasattr(prelu, 'weight_real')
-        assert hasattr(prelu, 'weight_imag')
+        assert hasattr(prelu, "weight_real")
+        assert hasattr(prelu, "weight_imag")
         assert isinstance(prelu.weight_real, nn.Parameter)
         assert isinstance(prelu.weight_imag, nn.Parameter)
 
@@ -1023,10 +1000,12 @@ class TestComplexPReLU:
         prelu = ComplexPReLU(num_parameters=1, init=0.2)
 
         # Create input with known positive and negative values
-        x = torch.tensor([
-            [[[2.0, -1.0], [3.0, -2.0]], [[2.0, -1.0], [3.0, -2.0]]],
-            [[[1.5, -0.5], [-1.0, 4.0]], [[2.0, -1.0], [3.0, -2.0]]]
-        ])
+        x = torch.tensor(
+            [
+                [[[2.0, -1.0], [3.0, -2.0]], [[2.0, -1.0], [3.0, -2.0]]],
+                [[[1.5, -0.5], [-1.0, 4.0]], [[2.0, -1.0], [3.0, -2.0]]],
+            ]
+        )
         print(x.shape)
         output = prelu.forward(x)
         real_out, imag_out = output.chunk(2, dim=1)
@@ -1042,10 +1021,12 @@ class TestComplexPReLU:
         prelu = ComplexPReLU(num_parameters=1, init=init_val)
 
         # Create input with known negative values
-        x = torch.tensor([
-            [[[-2.0, -1.0], [-3.0, -0.5]], [[-2.0, -1.0], [-3.0, -0.5]]],
-            [[[-1.5, -2.5], [-1.0, -4.0]], [[-2.0, -1.0], [-3.0, -0.5]]]
-        ])
+        x = torch.tensor(
+            [
+                [[[-2.0, -1.0], [-3.0, -0.5]], [[-2.0, -1.0], [-3.0, -0.5]]],
+                [[[-1.5, -2.5], [-1.0, -4.0]], [[-2.0, -1.0], [-3.0, -0.5]]],
+            ]
+        )
 
         output = prelu.forward(x)
         real_out, imag_out = output.chunk(2, dim=1)
@@ -1064,10 +1045,12 @@ class TestComplexPReLU:
         prelu = ComplexPReLU(num_parameters=1, init=init_val)
 
         # Create input with mixed values
-        x = torch.tensor([
-            [[[2.0, -1.0], [-3.0, 4.0]], [[2.0, -1.0], [-3.0, 4.0]]],
-            [[[-1.5, 2.5], [1.0, -4.0]], [[-1.5, 2.5], [1.0, -4.0]]]
-        ])
+        x = torch.tensor(
+            [
+                [[[2.0, -1.0], [-3.0, 4.0]], [[2.0, -1.0], [-3.0, 4.0]]],
+                [[[-1.5, 2.5], [1.0, -4.0]], [[-1.5, 2.5], [1.0, -4.0]]],
+            ]
+        )
 
         output = prelu.forward(x)
         real_out, imag_out = output.chunk(2, dim=1)
@@ -1098,11 +1081,11 @@ class TestComplexPReLU:
 
         # Check that each channel is scaled by its respective parameter
         for c in range(num_channels // 2):
-            expected_real_c = real_in[:, c:c+1] * prelu.weight_real[c]
-            expected_imag_c = imag_in[:, c:c+1] * prelu.weight_imag[c]
+            expected_real_c = real_in[:, c : c + 1] * prelu.weight_real[c]
+            expected_imag_c = imag_in[:, c : c + 1] * prelu.weight_imag[c]
 
-            assert torch.allclose(real_out[:, c:c+1], expected_real_c, atol=1e-6)
-            assert torch.allclose(imag_out[:, c:c+1], expected_imag_c, atol=1e-6)
+            assert torch.allclose(real_out[:, c : c + 1], expected_real_c, atol=1e-6)
+            assert torch.allclose(imag_out[:, c : c + 1], expected_imag_c, atol=1e-6)
 
     def test_forward_different_input_sizes(self):
         """Test forward pass with different input sizes."""
@@ -1110,10 +1093,10 @@ class TestComplexPReLU:
 
         # Test different input sizes
         input_sizes = [
-            (1, 2, 1, 1),       # Single pixel, 1 complex channel
-            (1, 8, 4, 4),       # Small image, 4 complex channels
-            (4, 16, 8, 8),      # Medium batch and image
-            (2, 32, 16, 32),    # Large image, 16 complex channels
+            (1, 2, 1, 1),  # Single pixel, 1 complex channel
+            (1, 8, 4, 4),  # Small image, 4 complex channels
+            (4, 16, 8, 8),  # Medium batch and image
+            (2, 32, 16, 32),  # Large image, 16 complex channels
         ]
 
         for batch_size, channels, height, width in input_sizes:
@@ -1174,8 +1157,12 @@ class TestComplexPReLU:
         assert prelu.weight_imag.grad is not None
 
         # Check that gradients are reasonable (non-zero for learnable parameters)
-        assert not torch.allclose(prelu.weight_real.grad, torch.zeros_like(prelu.weight_real.grad))
-        assert not torch.allclose(prelu.weight_imag.grad, torch.zeros_like(prelu.weight_imag.grad))
+        assert not torch.allclose(
+            prelu.weight_real.grad, torch.zeros_like(prelu.weight_real.grad)
+        )
+        assert not torch.allclose(
+            prelu.weight_imag.grad, torch.zeros_like(prelu.weight_imag.grad)
+        )
 
     def test_gradient_flow_per_channel(self):
         """Test gradient flow with per-channel parameters."""
@@ -1189,7 +1176,7 @@ class TestComplexPReLU:
         output = prelu.forward(x)
 
         # Create loss that depends on all parameters
-        loss = (output ** 2).sum()
+        loss = (output**2).sum()
 
         # Backward pass
         loss.backward()
@@ -1207,14 +1194,14 @@ class TestComplexPReLU:
         # Test on CPU
         x_cpu = torch.randn(1, 8, 4, 4)
         output_cpu = prelu.forward(x_cpu)
-        assert output_cpu.device.type == 'cpu'
+        assert output_cpu.device.type == "cpu"
 
         # Test on GPU if available
         if torch.cuda.is_available():
             prelu_gpu = prelu.cuda()
             x_gpu = x_cpu.cuda()
             output_gpu = prelu_gpu.forward(x_gpu)
-            assert output_gpu.device.type == 'cuda'
+            assert output_gpu.device.type == "cuda"
 
             # Results should be similar (allowing for minor numerical differences)
             assert torch.allclose(output_cpu, output_gpu.cpu(), atol=1e-6)
@@ -1226,10 +1213,7 @@ class TestComplexPReLU:
         assert isinstance(prelu, nn.Module)
 
         # Test that it can be added to a sequential model
-        model = nn.Sequential(
-            prelu,
-            nn.Flatten()
-        )
+        model = nn.Sequential(prelu, nn.Flatten())
 
         # Test parameter counting
         params = list(prelu.parameters())
@@ -1271,15 +1255,11 @@ class TestComplexPReLU:
         neg_imag_mask = imag_in < 0
         if neg_real_mask.any():
             assert torch.allclose(
-                real_out[neg_real_mask],
-                real_in[neg_real_mask] * 0.2,
-                atol=1e-6
+                real_out[neg_real_mask], real_in[neg_real_mask] * 0.2, atol=1e-6
             )
         if neg_imag_mask.any():
             assert torch.allclose(
-                imag_out[neg_imag_mask],
-                imag_in[neg_imag_mask] * 0.2,
-                atol=1e-6
+                imag_out[neg_imag_mask], imag_in[neg_imag_mask] * 0.2, atol=1e-6
             )
 
 
@@ -1291,19 +1271,17 @@ class TestComplexPReLUEdgeCases:
         prelu = ComplexPReLU(num_parameters=1, init=0.1)
 
         # Test with very large values
-        x_large = torch.tensor([
-            [[[1e6, -1e6]], [[1e6, -1e6]]],
-            [[[1e5, -1e5]], [[1e5, -1e5]]]
-        ])
+        x_large = torch.tensor(
+            [[[[1e6, -1e6]], [[1e6, -1e6]]], [[[1e5, -1e5]], [[1e5, -1e5]]]]
+        )
 
         output_large = prelu.forward(x_large)
         assert torch.isfinite(output_large).all()
 
         # Test with very small values
-        x_small = torch.tensor([
-            [[[1e-6, -1e-6]], [[1e-6, -1e-6]]],
-            [[[1e-7, -1e-7]], [[1e-7, -1e-7]]]
-        ])
+        x_small = torch.tensor(
+            [[[[1e-6, -1e-6]], [[1e-6, -1e-6]]], [[[1e-7, -1e-7]], [[1e-7, -1e-7]]]]
+        )
 
         output_small = prelu.forward(x_small)
         assert torch.isfinite(output_small).all()
@@ -1313,20 +1291,28 @@ class TestComplexPReLUEdgeCases:
         prelu = ComplexPReLU(num_parameters=1, init=0.25)
 
         # Input with exact zeros
-        x = torch.tensor([
-            [[[0.0, -1.0], [1.0, 0.0]], [[0.0, -1.0], [1.0, 0.0]]],
-            [[[0.0, 1.0], [-1.0, 0.0]], [[0.0, 1.0], [-1.0, 0.0]]]
-        ])
+        x = torch.tensor(
+            [
+                [[[0.0, -1.0], [1.0, 0.0]], [[0.0, -1.0], [1.0, 0.0]]],
+                [[[0.0, 1.0], [-1.0, 0.0]], [[0.0, 1.0], [-1.0, 0.0]]],
+            ]
+        )
 
         output = prelu.forward(x)
         real_out, imag_out = output.chunk(2, dim=1)
 
         # Zeros should remain zeros
-        zero_positions_real = (x[:, :1] == 0.0)
-        zero_positions_imag = (x[:, 1:] == 0.0)
+        zero_positions_real = x[:, :1] == 0.0
+        zero_positions_imag = x[:, 1:] == 0.0
 
-        assert torch.equal(real_out[zero_positions_real], torch.zeros_like(real_out[zero_positions_real]))
-        assert torch.equal(imag_out[zero_positions_imag], torch.zeros_like(imag_out[zero_positions_imag]))
+        assert torch.equal(
+            real_out[zero_positions_real],
+            torch.zeros_like(real_out[zero_positions_real]),
+        )
+        assert torch.equal(
+            imag_out[zero_positions_imag],
+            torch.zeros_like(imag_out[zero_positions_imag]),
+        )
 
     def test_single_pixel_input(self):
         """Test with single pixel input."""

@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from scipy.stats import truncnorm
 
+
 def truncnorm_moments(mu, sig, a, b):
     a, b = (a - mu) / sig, (b - mu) / sig
     sampled_gauss = truncnorm(a, b, loc=mu, scale=sig)
