@@ -207,6 +207,9 @@ unfixable = []
 
 [tool.ruff.lint.per-file-ignores]
 "examples/**" = ["I"]
+"tests/**" = [
+  "E402",
+]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -233,3 +236,7 @@ warn_unused_configs = "True"
 warn_unused_ignores = "True"
 allow_redefinition = "True"
 warn_no_return = "False"
+
+[tool.codespell]
+skip = "examples/**"  # NOTE: For now we skip the examples
+ignore-words-list = "RIME,bund"
