@@ -5,13 +5,13 @@ from typing import TYPE_CHECKING
 import numpy as np
 from astropy.modeling import fitting, models
 
-from radionets.core.logging import setup_logger
+from radionets.core.logging import _setup_logger
 
 if TYPE_CHECKING:
     from torch import Tensor
 
 
-LOGGER = setup_logger(namespace=__name__)
+LOGGER = _setup_logger(namespace=__name__)
 
 
 def fitgaussian_crop(
@@ -77,7 +77,7 @@ def fitgaussian_iterative(
     max_iter: int = 10,
 ):
     """Fitting a gaussian iteratively around the maxima.
-    Fit -> Substract -> Fit -> Substract ... until stopping criteria
+    Fit -> Subtract -> Fit -> Subtract ... until stopping criteria
 
     Parameters
     ----------
