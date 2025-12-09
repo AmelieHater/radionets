@@ -8,6 +8,9 @@ except ImportError:
     _CODECARBON_AVAILABLE = False
 
 
+__all__ = ["carbontracker"]
+
+
 @contextmanager
 def carbontracker(train_config):
     if _CODECARBON_AVAILABLE and train_config.logging.codecarbon:
