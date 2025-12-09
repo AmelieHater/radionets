@@ -130,7 +130,25 @@ omit = [
 output = "coverage.xml"
 
 [tool.pytest.ini_options]
-addopts = "--verbose"
+norecursedirs = [
+    ".git",
+    ".github",
+    "dist",
+    "build",
+    "docs",
+]
+addopts = [
+    "--strict-markers",
+    "--doctest-modules",
+    "--color=yes",
+    "--disable-pytest-warnings",
+    "--ignore=legacy/checkpoints",
+]
+filterwarnings = [
+    "error::FutureWarning",
+    "ignore:You are using `torch.load` with `weights_only=False`.*:FutureWarning",
+]
+xfail_strict = true
 
 [tool.towncrier]
     package = "radionets"
@@ -171,7 +189,7 @@ addopts = "--verbose"
 [tool.ruff]
 target-version = "py311"
 line-length = 88
-extend-exclude = ["tests", "examples"]
+extend-exclude = ["examples"]
 
 [tool.ruff.lint]
 extend-select = [
@@ -199,3 +217,19 @@ docstring-code-format = true
 
 [tool.ruff.lint.isort]
 known-first-party = ["radionets"]
+
+[tool.mypy]
+files = [
+    "src/radionets",
+]
+
+install_types = "True"
+non_interactive = "True"
+disallow_untyped_defs = "True"
+ignore_missing_imports = "True"
+show_error_codes = "True"
+warn_redundant_casts = "True"
+warn_unused_configs = "True"
+warn_unused_ignores = "True"
+allow_redefinition = "True"
+warn_no_return = "False"
