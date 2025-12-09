@@ -65,7 +65,7 @@ def set_cbar(
 
 
 def get_vmin_vmax(image: ArrayLike):
-    """Check whether the absolute of the maxmimum or the minimum is bigger.
+    """Check whether the absolute of the maximum or the minimum is bigger.
     If the minimum is bigger, return value with negative sign. Otherwise return
     maximum.
 

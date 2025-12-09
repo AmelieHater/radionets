@@ -36,7 +36,7 @@ class NNBlock(nn.Module):
         Controls the behavior of input and output groups.
         See :class:`~torch.nn.Conv2d`. Default: 1
     dropout : bool or float, optional
-        Wether to apply dropout. If float > 0 this is
+        Whether to apply dropout. If float > 0 this is
         the dropout percentage. Default: False
     """
 
@@ -70,7 +70,7 @@ class NNBlock(nn.Module):
             Controls the behavior of input and output groups.
             See :class:`~torch.nn.Conv2d`. Default: 1
         dropout : bool or float, optional
-            Wether to apply dropout. If float > 0 this is
+            Whether to apply dropout. If float > 0 this is
             the dropout percentage. Default: False
         """
         super().__init__()
@@ -121,7 +121,7 @@ class SRBlock(NNBlock):
         Controls the behavior of input and output groups.
         See :class:`~torch.nn.Conv2d`. Default: 1
     dropout : bool or float, optional
-        Wether to apply dropout. If float > 0 this is
+        Whether to apply dropout. If float > 0 this is
         the dropout percentage. Default: False
     """
 
@@ -164,7 +164,7 @@ class SRBlock(NNBlock):
             Controls the behavior of input and output groups.
             See :class:`~torch.nn.Conv2d`. Default: 1
         dropout : bool or float, optional
-            Wether to apply dropout. If float > 0 this is
+            Whether to apply dropout. If float > 0 this is
             the dropout percentage. Default: False
         """
 
@@ -228,7 +228,7 @@ class ComplexSRBlock(NNBlock):
         Controls the behavior of input and output groups.
         See :class:`~torch.nn.Conv2d`. Default: 1
     dropout : bool or float, optional
-        Wether to apply dropout. If float > 0 this is
+        Whether to apply dropout. If float > 0 this is
         the dropout percentage. Default: False
     """
 
@@ -271,7 +271,7 @@ class ComplexSRBlock(NNBlock):
             Controls the behavior of input and output groups.
             See :class:`~torch.nn.Conv2d`. Default: 1
         dropout : bool or float, optional
-            Wether to apply dropout. If float > 0 this is
+            Whether to apply dropout. If float > 0 this is
             the dropout percentage. Default: False
         """
 
@@ -329,7 +329,7 @@ class BottleneckResBlock(NNBlock):
         Controls the behavior of input and output groups.
         See :class:`~torch.nn.Conv2d`. Default: 1
     dropout : bool or float, optional
-        Wether to apply dropout. If float > 0 this is
+        Whether to apply dropout. If float > 0 this is
         the dropout percentage. Default: False
     """
 
@@ -365,7 +365,7 @@ class BottleneckResBlock(NNBlock):
             Controls the behavior of input and output groups.
             See :class:`~torch.nn.Conv2d`. Default: 1
         dropout : bool or float, optional
-            Wether to apply dropout. If float > 0 this is
+            Whether to apply dropout. If float > 0 this is
             the dropout percentage. Default: False
         """
 
@@ -451,7 +451,7 @@ class Encoder(NNBlock):
     bias : bool
         Whether to apply bias. Default: False
     dropout : bool or float, optional
-        Wether to apply dropout. If float > 0 this is
+        Whether to apply dropout. If float > 0 this is
         the dropout percentage. Default: False
     batchnorm : bool, optional
         If ``True``, add a batchnorm layer to the
@@ -492,7 +492,7 @@ class Encoder(NNBlock):
         bias : bool
             Whether to apply bias. Default: False
         dropout : bool or float, optional
-            Wether to apply dropout. If float > 0 this is
+            Whether to apply dropout. If float > 0 this is
             the dropout percentage. Default: False
         batchnorm : bool, optional
             If ``True``, add a batchnorm layer to the
@@ -561,7 +561,7 @@ class Decoder(NNBlock):
     bias : bool
         Whether to apply bias. Default: False
     dropout : bool or float, optional
-        Wether to apply dropout. If float > 0 this is
+        Whether to apply dropout. If float > 0 this is
         the dropout percentage. Default: False
     """
 
@@ -601,7 +601,7 @@ class Decoder(NNBlock):
         bias : bool
             Whether to apply bias. Default: False
         dropout : bool or float, optional
-            Wether to apply dropout. If float > 0 this is
+            Whether to apply dropout. If float > 0 this is
             the dropout percentage. Default: False
         """
 

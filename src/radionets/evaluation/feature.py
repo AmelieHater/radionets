@@ -40,12 +40,12 @@ def calc_blobs(
     if isinstance(ifft_truth, torch.Tensor):
         ifft_truth = ifft_truth.detach().cpu().numpy()
 
-    treshold = ifft_truth.max() * 0.1
+    threshold = ifft_truth.max() * 0.1
     kwargs = {
         "min_sigma": 1,
         "max_sigma": 10,
         "num_sigma": 100,
-        "threshold": treshold,
+        "threshold": threshold,
         "overlap": 0.9,
     }
 

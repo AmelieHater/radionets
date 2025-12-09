@@ -57,7 +57,7 @@ def main(
     inside that directory.
     """
     if mode not in ["train", "eval"]:
-        raise ValueError("unkown mode: expected one of {train, eval}.")
+        raise ValueError("Unknown mode: Expected one of {train, eval}.")
 
     log = _setup_logger(namespace=__name__, tracebacks_suppress=[click])
 

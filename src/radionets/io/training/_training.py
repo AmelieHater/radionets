@@ -35,7 +35,7 @@ class LossConfig(BaseModel):
             loss_func = avail_loss_funcs[loss_func]
         except KeyError as e:
             raise ValueError(
-                f"unkown optimizer: TrainConfig got {loss_func} but expected "
+                f"Unknown optimizer: TrainConfig got {loss_func} but expected "
                 f"one of {set(avail_loss_funcs)}!"
             ) from e
 
@@ -61,7 +61,7 @@ class OptimizerConfig(BaseModel):
             optimizer = avail_optimizers[optimizer]
         except KeyError as e:
             raise ValueError(
-                f"unkown optimizer: TrainConfig got {optimizer} but expected "
+                f"Unknown optimizer: TrainConfig got {optimizer} but expected "
                 f"one of {set(avail_optimizers)}!"
             ) from e
 

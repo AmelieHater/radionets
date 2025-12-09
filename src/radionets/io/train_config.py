@@ -67,7 +67,7 @@ class ModelConfig(BaseModel):
             arch = avail_archs[arch]
         except KeyError as e:
             raise ValueError(
-                f"unkown architecture: TrainConfig got {arch} but expected "
+                f"Unknown architecture: TrainConfig got {arch} but expected "
                 f"one of {avail_archs.keys()}!"
             ) from e
 
@@ -177,7 +177,7 @@ class DataLoaderConfig(BaseModel):
             data_module = avail_data_modules[name]
         except KeyError as e:
             raise ValueError(
-                f"unkown optimizer: TrainConfig got {name} but expected "
+                f"Unknown optimizer: TrainConfig got {name} but expected "
                 f"one of {set(avail_data_modules)}!"
             ) from e
 
