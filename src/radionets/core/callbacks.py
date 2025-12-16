@@ -4,6 +4,7 @@ from pathlib import Path
 
 import lightning as L
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from lightning.pytorch.callbacks import (
     BatchSizeFinder,
@@ -19,6 +20,7 @@ from lightning.pytorch.loggers import CometLogger, MLFlowLogger
 from matplotlib.colors import PowerNorm
 from pydantic import BaseModel
 
+from radionets.evaluation.contour import area_of_contour
 from radionets.evaluation.utils import apply_symmetry, get_ifft
 from radionets.plotting.utils import get_vmin_vmax, set_cbar
 
@@ -68,6 +70,8 @@ class Callbacks:
 
             if train_config.logging.codecarbon:
                 callbacks.append(MLFlowCodeCarbonCallback(train_config))
+
+            callbacks.append(SourceRatioCallback(train_config))
 
         return callbacks
 
@@ -392,3 +396,79 @@ class MLFlowCodeCarbonCallback(LightningCallback):
         # files in the save directory
         if emission_file.is_file():
             emission_file.unlink()
+
+
+class SourceRatioCallback(LightningCallback):
+    def __init__(self, train_config, *args, **kwargs):
+        self.train_config = train_config
+        self.amp_phase = train_config.model.amp_phase
+
+        self.experiment = None
+
+    def on_fit_end(self, trainer, pl_module):
+        if self.experiment is None:
+            self._set_up_experiment(trainer)
+
+        self._log_metrics(
+            dataloader=trainer.datamodule.val_dataloader(),
+            pl_module=pl_module,
+        )
+
+    def on_test_end(self, trainer, pl_module):
+        if self.experiment is None:
+            self._set_up_experiment(trainer)
+
+        self._log_metrics(
+            dataloader=trainer.datamodule.test_dataloader(),
+            pl_module=pl_module,
+        )
+
+    def on_predict_end(self, trainer, pl_module):
+        if self.experiment is None:
+            self._set_up_experiment(trainer)
+
+        self._log_metrics(
+            dataloader=trainer.datamodule.predict_dataloader(),
+            pl_module=pl_module,
+        )
+
+    def _set_up_experiment(self, trainer):
+        try:
+            self.logger = next(
+                logger for logger in trainer.loggers if isinstance(logger, MLFlowLogger)
+            )
+            self.experiment = self.logger.experiment
+
+        except StopIteration as e:
+            raise ValueError(
+                f"Could not find a MLFlowLogger instance in {trainer.loggers}."
+            ) from e
+
+    def _log_metrics(self, dataloader, pl_module):
+        area = []
+        for batch in dataloader:
+            preds = pl_module.predict_step(batch[0], batch_idx=0).detach().cpu()
+            targets = batch[1].detach().cpu()
+
+            # check if images are half or full
+            if preds.shape[-2] != preds.shape[-1]:
+                preds = apply_symmetry(preds)
+                targets = apply_symmetry(targets)
+
+            ifft_preds = get_ifft(preds, amp_phase=self.amp_phase)
+            ifft_targets = get_ifft(targets, amp_phase=self.amp_phase)
+
+            print(ifft_preds.shape)
+
+            area.extend(
+                [
+                    area_of_contour(ifft_pred, ifft_target)
+                    for ifft_pred, ifft_target in zip(ifft_preds, ifft_targets)
+                ]
+            )
+
+        self.experiment.log_metric(
+            key="area_ratio",
+            value=np.mean(area),
+            run_id=self.logger._run_id,
+        )
