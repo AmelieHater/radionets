@@ -49,16 +49,20 @@ def compute_area_ratio(cs_pred: QuadContourSet, cs_truth: QuadContourSet) -> flo
         Ratio between true and predicted source areas.
     """
     areas_pred = np.array(
-        [_compute_source_area(path.vertices for path in cs_pred.get_paths())]
+        [_compute_source_area(path.vertices) for path in cs_pred.get_paths()]
     )
     areas_truth = np.array(
-        [_compute_source_area(path.vertices for path in cs_truth.get_paths())]
+        [_compute_source_area(path.vertices) for path in cs_truth.get_paths()]
     )
 
     return areas_pred.sum() / areas_truth.sum()
 
 
-def area_of_contour(ifft_pred: ArrayLike, ifft_truth: ArrayLike) -> float:
+def area_of_contour(
+    ifft_pred: ArrayLike,
+    ifft_truth: ArrayLike,
+    level: float = 0.05,
+) -> float:
     """Compute area ratio at 5% of the maximum of prediction and truth.
 
     Parameters
@@ -73,7 +77,7 @@ def area_of_contour(ifft_pred: ArrayLike, ifft_truth: ArrayLike) -> float:
     float
         area difference
     """
-    levels = [ifft_truth.max() * 0.05]
+    levels = [ifft_truth.max() * level]
 
     fig, ax = plt.subplots()
     cs_pred = ax.contour(ifft_pred, levels=levels)
