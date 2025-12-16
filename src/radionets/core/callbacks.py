@@ -391,6 +391,20 @@ class MLFlowCodeCarbonCallback(LightningCallback):
                 run_id=self.logger._run_id,
             )
 
+        dataset = self.train_config.paths.data_path.name
+        dataset += "_amp_phase" if self.train_config.model.amp_phase else "_real_imag"
+
+        params_dict = dict(
+            model=str(self.train_config.model.arch_name.__class__.__name__),
+            dataset=dataset,
+        )
+        for key, val in params_dict.items():
+            self.experiment.log_param(
+                key=key,
+                value=val,
+                run_id=self.logger._run_id,
+            )
+
         # Remove file after logging all important metrics to mlflow.
         # This prevents codecarbon from creating 'emissions.csv_%d.bak'
         # files in the save directory
@@ -457,8 +471,6 @@ class SourceRatioCallback(LightningCallback):
 
             ifft_preds = get_ifft(preds, amp_phase=self.amp_phase)
             ifft_targets = get_ifft(targets, amp_phase=self.amp_phase)
-
-            print(ifft_preds.shape)
 
             area.extend(
                 [
