@@ -86,6 +86,8 @@ def main(config_path, mode="train", premodel=None):
         else "auto",
     )
 
+    trainer.radionets_task = mode.lower()
+
     if mode.lower() == "train":
         # let mlflow callback stop the tracker
         stop_inside_scope = train_config.logging.mlflow
