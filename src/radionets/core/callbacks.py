@@ -20,7 +20,7 @@ from lightning.pytorch.loggers import CometLogger, MLFlowLogger
 from matplotlib.colors import PowerNorm
 from pydantic import BaseModel
 
-from radionets.evaluation.contour import area_of_contour
+from radionets.evaluation.contour import analyse_intensity, area_of_contour
 from radionets.evaluation.utils import apply_symmetry, get_ifft
 from radionets.plotting.utils import get_vmin_vmax, set_cbar
 
@@ -71,7 +71,7 @@ class Callbacks:
             if train_config.logging.codecarbon:
                 callbacks.append(MLFlowCodeCarbonCallback(train_config))
 
-            callbacks.append(SourceRatioCallback(train_config))
+            callbacks.append(LogAdditionalParamsCallback(train_config))
 
         return callbacks
 
@@ -376,6 +376,7 @@ class MLFlowCodeCarbonCallback(LightningCallback):
             )
             trainer.carbontracker.tracker.stop()
             self.experiment = self.logger.experiment
+            self.task = trainer.radionets_task
 
         except StopIteration as e:
             raise ValueError(
@@ -402,6 +403,8 @@ class MLFlowCodeCarbonCallback(LightningCallback):
                 run_id=self.logger._run_id,
             )
 
+        self.architecture = emission_data["gpu_model"][0]
+
         # Remove file after logging all important metrics to mlflow.
         # This prevents codecarbon from creating 'emissions.csv_%d.bak'
         # files in the save directory
@@ -415,6 +418,8 @@ class MLFlowCodeCarbonCallback(LightningCallback):
         params_dict = dict(
             model=str(self.train_config.model.arch_name().__class__.__name__),
             dataset=dataset,
+            task=self.task,
+            architecture=self.architecture,
         )
         for key, val in params_dict.items():
             self.experiment.log_param(
@@ -424,7 +429,7 @@ class MLFlowCodeCarbonCallback(LightningCallback):
             )
 
 
-class SourceRatioCallback(LightningCallback):
+class LogAdditionalParamsCallback(LightningCallback):
     def __init__(self, train_config, *args, **kwargs):
         self.train_config = train_config
         self.amp_phase = train_config.model.amp_phase
@@ -472,6 +477,8 @@ class SourceRatioCallback(LightningCallback):
 
     def _log_metrics(self, dataloader, pl_module):
         area = []
+        total_flux = []
+        peak_flux = []
         for batch in dataloader:
             preds = pl_module.predict_step(batch[0], batch_idx=0).detach().cpu()
             targets = batch[1].detach().cpu()
@@ -491,8 +498,23 @@ class SourceRatioCallback(LightningCallback):
                 ]
             )
 
-        self.experiment.log_metric(
-            key="area_ratio",
-            value=np.mean(area),
-            run_id=self.logger._run_id,
+            total, peak = analyse_intensity(ifft_preds, ifft_targets)
+            total_flux.extend(total)
+            peak_flux.extend(peak)
+
+        trainable_params = sum(
+            p.numel() for p in pl_module.parameters() if p.requires_grad
         )
+        additional_metrics = dict(
+            num_trainable_parameters=trainable_params,
+            mean_area_ratio=np.abs(1.0 - np.mean(area)),
+            mean_total_flux=np.abs(1.0 - np.mean(total_flux)),
+            mean_peak_flux=np.abs(1.0 - np.mean(peak_flux)),
+        )
+
+        for key, val in additional_metrics.items():
+            self.experiment.log_metric(
+                key=key,
+                value=val,
+                run_id=self.logger._run_id,
+            )
