@@ -9,7 +9,7 @@ from radionets.core.logging import Loggers
 from radionets.io import TrainConfig
 from radionets.training import TrainModule
 from radionets.utils._paths import _validate_pre_model_path
-from radionets.utils.carbon_tracking import carbontracker
+from radionets.utils.carbon_tracking import CarbonTracker
 
 
 @click.command()
@@ -29,7 +29,7 @@ def main(config_path, mode="train", premodel=None):
     configuration_path : str
         Path to the configuration toml file.
     mode : str, optional
-        Operation mode, can be one of {'train'}.
+        Operation mode, can be one of {'train', 'test', 'predict'}.
         Default: 'train'
     """
     if not isinstance(config_path, Path):
@@ -52,6 +52,7 @@ def main(config_path, mode="train", premodel=None):
     data_module = train_config.dataloader.module(
         data_dir=train_config.paths.data_path,
         batch_size=train_config.training.batch_size,
+        fourier=train_config.model.fourier,
         **train_config.dataloader.model_dump(),
     )
 
@@ -86,7 +87,13 @@ def main(config_path, mode="train", premodel=None):
     )
 
     if mode.lower() == "train":
-        with carbontracker(train_config=train_config):
+        # let mlflow callback stop the tracker
+        stop_inside_scope = train_config.logging.mlflow
+
+        with CarbonTracker(
+            train_config=train_config, stop_inside_scope=stop_inside_scope
+        ) as tracker:
+            trainer.carbontracker = tracker
             trainer.fit(model=train_module, datamodule=data_module)
 
     elif mode.lower() == "test":
