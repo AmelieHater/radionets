@@ -69,8 +69,11 @@ class CodeCarbonEmissionTrackerConfig(BaseModel):
             v = Path(v)
 
         if v in {None, False}:
-            v = os.getcwd()
+            v = Path(os.getcwd())
         else:
             v.expanduser().resolve()
+
+        if not v.exists():
+            v.mkdir(parents=True)
 
         return str(v)
