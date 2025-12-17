@@ -329,6 +329,8 @@ class MLFlowCodeCarbonCallback(LightningCallback):
     def on_fit_end(self, trainer, pl_module):
         if self.experiment is None:
             self._set_up_experiment(trainer)
+            self.num_samples = trainer.datamodule.train_length
+            self.num_samples += trainer.datamodule.valid_length
 
         try:
             self._log_metrics()
@@ -336,10 +338,13 @@ class MLFlowCodeCarbonCallback(LightningCallback):
             warnings.warn(f"{e}. No emissions were logged.", stacklevel=2)
         except KeyError as e:
             warnings.warn(f"{e}. No emissions were logged.", stacklevel=2)
+
+        self._log_params()
 
     def on_test_end(self, trainer, pl_module):
         if self.experiment is None:
             self._set_up_experiment(trainer)
+            self.num_samples = trainer.datamodule.test_length
 
         try:
             self._log_metrics()
@@ -347,10 +352,13 @@ class MLFlowCodeCarbonCallback(LightningCallback):
             warnings.warn(f"{e}. No emissions were logged.", stacklevel=2)
         except KeyError as e:
             warnings.warn(f"{e}. No emissions were logged.", stacklevel=2)
+
+        self._log_params()
 
     def on_predict_end(self, trainer, pl_module):
         if self.experiment is None:
             self._set_up_experiment(trainer)
+            self.num_samples = trainer.datamodule.predict_length
 
         try:
             self._log_metrics()
@@ -358,12 +366,15 @@ class MLFlowCodeCarbonCallback(LightningCallback):
             warnings.warn(f"{e}. No emissions were logged.", stacklevel=2)
         except KeyError as e:
             warnings.warn(f"{e}. No emissions were logged.", stacklevel=2)
+
+        self._log_params()
 
     def _set_up_experiment(self, trainer):
         try:
             self.logger = next(
                 logger for logger in trainer.loggers if isinstance(logger, MLFlowLogger)
             )
+            trainer.carbontracker.tracker.stop()
             self.experiment = self.logger.experiment
 
         except StopIteration as e:
@@ -379,27 +390,13 @@ class MLFlowCodeCarbonCallback(LightningCallback):
 
         eval_res = dict(
             running_time_total=emission_data["duration"][0],
-            running_time=emission_data["duration"][0],
+            running_time=emission_data["duration"][0] / self.num_samples,
             power_draw_total=emission_data["energy_consumed"][0] * 3.6e6,
-            power_draw=emission_data["energy_consumed"][0] * 3.6e6,
+            power_draw=emission_data["energy_consumed"][0] * 3.6e6 / self.num_samples,
         )
 
         for key, val in eval_res.items():
             self.experiment.log_metric(
-                key=key,
-                value=val,
-                run_id=self.logger._run_id,
-            )
-
-        dataset = self.train_config.paths.data_path.name
-        dataset += "_amp_phase" if self.train_config.model.amp_phase else "_real_imag"
-
-        params_dict = dict(
-            model=str(self.train_config.model.arch_name.__class__.__name__),
-            dataset=dataset,
-        )
-        for key, val in params_dict.items():
-            self.experiment.log_param(
                 key=key,
                 value=val,
                 run_id=self.logger._run_id,
@@ -410,6 +407,21 @@ class MLFlowCodeCarbonCallback(LightningCallback):
         # files in the save directory
         if emission_file.is_file():
             emission_file.unlink()
+
+    def _log_params(self):
+        dataset = self.train_config.paths.data_path.name
+        dataset += "_amp_phase" if self.train_config.model.amp_phase else "_real_imag"
+
+        params_dict = dict(
+            model=str(self.train_config.model.arch_name().__class__.__name__),
+            dataset=dataset,
+        )
+        for key, val in params_dict.items():
+            self.experiment.log_param(
+                key=key,
+                value=val,
+                run_id=self.logger._run_id,
+            )
 
 
 class SourceRatioCallback(LightningCallback):
