@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
 import numpy as np
+from torch import Tensor
 
 if TYPE_CHECKING:
     from matplotlib.contour import QuadContourSet
@@ -111,7 +112,13 @@ def analyse_intensity(pred: ArrayLike, truth: ArrayLike) -> tuple[float, float]:
     if truth.ndim == 2:
         truth = truth[None, ...]
 
-    threshold = truth.max(axis=(-2, -1)) * 0.05
+    if isinstance(pred, Tensor):
+        pred = pred.detach().cpu().numpy()
+
+    if isinstance(truth, Tensor):
+        truth = truth.detach().cpu().numpy()
+
+    threshold = truth.max(axis=(-2, -1), keepdims=True) * 0.05
 
     source_truth = np.where(truth > threshold, truth, 0)
     source_pred = np.where(pred > threshold, pred, 0)
