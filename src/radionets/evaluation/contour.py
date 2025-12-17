@@ -117,6 +117,6 @@ def analyse_intensity(pred: ArrayLike, truth: ArrayLike) -> tuple[float, float]:
     source_pred = np.where(pred > threshold, pred, 0)
 
     sum_ratio = source_pred.sum(axis=(-2, -1)) / source_truth.sum(axis=(-2, -1))
-    peak_ratio = source_pred.max(axis=(-2, -1)) / source_truth.peak(axis=(-2, -1))
+    peak_ratio = source_pred.max(axis=(-2, -1)) / source_truth.max(axis=(-2, -1))
 
     return sum_ratio, peak_ratio
