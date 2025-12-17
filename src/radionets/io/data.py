@@ -150,6 +150,7 @@ class H5DataModule(LightningDataModule):
         self.train_length = None
         self.valid_length = None
         self.test_length = None
+        self.predict_length = None
 
         self.save_hyperparameters()
 
@@ -194,6 +195,8 @@ class H5DataModule(LightningDataModule):
                     tar_fourier=self.fourier,
                     mode="valid",
                 )
+                self.train_length = len(self.vis_train)
+                self.valid_length = len(self.vis_val)
 
             case "test":
                 self.vis_test = H5DataSet(
@@ -201,6 +204,7 @@ class H5DataModule(LightningDataModule):
                     tar_fourier=self.fourier,
                     mode="test",
                 )
+                self.test_length = len(self.vis_test)
             case "predict":
                 self.vis_predict = H5DataSet(
                     self.data_dir,
@@ -210,6 +214,7 @@ class H5DataModule(LightningDataModule):
                 # NOTE: For now, this will look for test files,
                 # but in the future this stage should be used for
                 # inference only
+                self.predict_length = len(self.vis_predict)
             case _:
                 raise ValueError(
                     f"Stage {stage} is not available in {self.__class__.__name__}"
@@ -439,6 +444,13 @@ class WebDatasetModule(LightningDataModule):
                 self.test_dataset = self._create_dataset("test", shuffle=False)
             case "predict":
                 self.predict_dataset = self._create_dataset("test", shuffle=False)
+
+                predict_parquet = list(self.data_dir.glob("predict-*.parquet"))[0]
+                self.predict_length = (
+                    pq.read_table(predict_parquet)
+                    .to_pandas()["total_samples_in_dataset"]
+                    .values[0]
+                )
             case _:
                 raise ValueError(
                     f"Stage '{stage}' is not available in {self.__class__.__name__}"
