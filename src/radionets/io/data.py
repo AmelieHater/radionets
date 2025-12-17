@@ -153,6 +153,7 @@ class H5DataModule(LightningDataModule):
         self.predict_length = None
 
         self.save_hyperparameters()
+        self.setup("fit")
 
     def setup(self, stage: str):
         """
