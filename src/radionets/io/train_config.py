@@ -174,7 +174,12 @@ class DataLoaderConfig(BaseModel):
                 avail_data_modules[member[0]] = member[1]
 
         try:
-            data_module = avail_data_modules[name]
+            if name.lower() in ["h5", "hdf5"]:
+                data_module = avail_data_modules["H5DataModule"]
+            elif name.lower() in ["wds", "webdataset"]:
+                data_module = avail_data_modules["WebDatasetModule"]
+            else:
+                data_module = avail_data_modules[name]
         except KeyError as e:
             raise ValueError(
                 f"Unknown optimizer: TrainConfig got {name} but expected "
