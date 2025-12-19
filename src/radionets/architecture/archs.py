@@ -17,6 +17,8 @@ __all__ = [
     "SRResNet18",
     "SRResNet18Complex",
     "SRResNet18AmpPhase",
+    "SRResNet18Amp",
+    "SRResNet18Phase",
     "SRResNet34",
     "SRResNet34AmpPhase",
     "SRResNet34_unc",
@@ -25,19 +27,19 @@ __all__ = [
 
 
 class SRResNet(nn.Module):
-    def __init__(self):
+    def __init__(self, channels=2, groups=2):
         super().__init__()
 
         self.channels = 64
 
         self.preBlock = nn.Sequential(
             nn.Conv2d(
-                in_channels=2,
+                in_channels=channels,
                 out_channels=self.channels,
                 kernel_size=9,
                 stride=1,
                 padding=4,
-                groups=2,
+                groups=groups,
             ),
             nn.PReLU(),
         )
@@ -57,18 +59,18 @@ class SRResNet(nn.Module):
         self.final = nn.Sequential(
             nn.Conv2d(
                 in_channels=self.channels,
-                out_channels=2,
+                out_channels=channels,
                 kernel_size=9,
                 stride=1,
                 padding=4,
-                groups=2,
+                groups=groups,
             ),
         )
 
-    def _create_blocks(self, n_blocks):
+    def _create_blocks(self, n_blocks, **kwargs):
         blocks = []
         for _ in range(n_blocks):
-            blocks.append(SRBlock(64, 64))
+            blocks.append(SRBlock(64, 64, **kwargs))
 
         self.blocks = nn.Sequential(*blocks)
 
@@ -154,18 +156,75 @@ class SRResNet18AmpPhase(SRResNet):
         super().__init__()
 
         # Create 8 ResBlocks to build a SRResNet18
-        self._create_blocks(8)
+        self._create_blocks(8, groups=1)
 
         self.hardtanh = nn.Hardtanh(-pi, pi)
         self.relu = nn.ReLU()
 
     def forward(self, x):
-        x = super().forward(x)
+        x = super().forward(x)["pred"]
 
         x_amp = self.relu(x[:, 0].unsqueeze(1))
         x_phase = self.hardtanh(x[:, 1].unsqueeze(1))
 
         return {"pred": torch.cat([x_amp, x_phase], dim=1)}
+
+
+###########################################Meine lustigen Ideen:
+
+
+class SRResNet18Amp(SRResNet):
+    def __init__(self, channels=1, groups=1):
+        super().__init__(channels=1, groups=1)
+
+        # Create 8 ResBlocks to build a SRResNet18
+        self._create_blocks(8, groups=1)
+
+        self.relu = nn.ReLU()
+
+    def forward(self, input):
+        x_amp = input[:, 0].unsqueeze(1)
+        x_amp = self.preBlock(x_amp)
+        x_amp = x_amp + self.postBlock(self.blocks(x_amp))
+        x_amp = self.final(x_amp)
+
+        x_amp = self.relu(x_amp)
+
+        x_phase = input[:, 1].unsqueeze(1)  # Die unveränderte Phase wird wieder vereint
+        # mit der trainierten Amplitude durch torch.cat
+
+        return {"pred": torch.cat([x_amp, x_phase], dim=1)}
+
+    # pred = x["pred"]
+    # inp_amp = pred[:, 0, :]
+    # inp_phase = pred[:, 1, :]
+
+
+class SRResNet18Phase(SRResNet):
+    def __init__(self, channels=1, groups=1):
+        super().__init__(channels=1, groups=1)
+
+        # Create 8 ResBlocks to build a SRResNet18
+        self._create_blocks(8, groups=1)
+
+        self.hardtanh = nn.Hardtanh(-pi, pi)
+
+    def forward(self, input):
+        x_phase = input[:, 1].unsqueeze(1)
+        x_phase = self.preBlock(x_phase)
+        x_phase = x_phase + self.postBlock(self.blocks(x_phase))
+        x_phase = self.final(x_phase)
+
+        x_phase = self.hardtanh(x_phase)
+
+        x_amp = input[:, 0].unsqueeze(1)
+        # Die unveränderte Amplitude wird wieder vereint mit
+        # der trainierten Amplitude durch torch.cat
+
+        return {"pred": torch.cat([x_amp, x_phase], dim=1)}
+
+
+##################################################################
 
 
 class SRResNet34(SRResNet):
